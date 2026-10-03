@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-palette="soft">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+    <script>
+        CythonTheme.apply({ dark: '#111', light: '#f4f7f9' });
+    </script>
+    <title>حسابي - Cython 2.0</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+
+        :root { --main: #4facfe; --bg: #f4f7f9; --app: #ffffff; --p: #555; --input-bg: #f0f8ff; --text: #1e293b; --danger: #ff4757; }
+        
+        
+        html.dark { --bg: #111 !important; --app: #222 !important; --p: #bbb !important; --input-bg: #333 !important; --text: #f0f6fc; }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; outline: none !important; -webkit-tap-highlight-color: transparent; }
+        
+        body { background: var(--bg); height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; transition: 0.5s; }
+
+        .phone { 
+            width: 100%; height: 100%; max-width: 500px; 
+            background: var(--app); display: flex; flex-direction: column; 
+            overflow: hidden; position: relative; transition: 0.3s;
+        }
+
+        @media (min-width: 501px) {
+            .phone { height: 92vh; border-radius: 40px; border: 8px solid #222; box-shadow: 0 30px 60px rgba(0,0,0,0.3); }
+        }
+
+        .header { padding: calc(40px + env(safe-area-inset-top)) 20px 15px; display: flex; align-items: center; gap: 15px; background: var(--app); z-index: 10; }
+        .header h3 { color: var(--main); font-weight: 900; font-size: 20px; }
+        .back-link { color: var(--main); font-size: 22px; text-decoration: none; padding: 5px; }
+
+        .content { flex: 1; padding: 20px 25px; overflow-y: auto; text-align: center; scrollbar-width: none; }
+        .content::-webkit-scrollbar { display: none; }
+
+        .profile-pic-container { position: relative; width: 110px; height: 110px; margin: 0 auto 30px; }
+        .profile-pic { width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--main); padding: 4px; object-fit: cover; background: var(--app); }
+
+        .info-card { background: var(--input-bg); padding: 15px 18px; border-radius: 22px; margin-bottom: 15px; text-align: right; border: 1px solid transparent; }
+        .info-card:focus-within { border-color: var(--main); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+
+        .label { font-size: 12px; color: var(--p); display: block; font-weight: bold; margin-bottom: 5px; }
+        .field-group { display: flex; align-items: center; gap: 10px; }
+        .val { flex: 1; background: none; border: none; color: var(--text); font-weight: bold; font-size: 15px; width: 100%; }
+        .val:read-only { color: var(--main); opacity: 0.9; }
+
+        .eye-btn { cursor: pointer; color: var(--p); font-size: 14px; padding: 5px; }
+
+        .actions { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; padding-bottom: env(safe-area-inset-bottom); }
+        .btn { width: 100%; padding: 16px; border-radius: 18px; border: none; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-save { background: var(--main); color: white; }
+        .btn-logout { background: var(--danger); color: white; margin-top: 5px; }
+        .btn:active { transform: scale(0.96); }
+
+        /* نافذة التحذير المخصصة يا علي */
+        .modal-overlay { 
+            position: absolute; inset: 0; background: rgba(0,0,0,0.7); 
+            display: none; align-items: center; justify-content: center; 
+            z-index: 5000; backdrop-filter: blur(8px); 
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box { 
+            background: var(--app); width: 85%; padding: 30px 20px; border-radius: 35px; 
+            text-align: center; transform: scale(0.8); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+        .modal-icon { width: 60px; height: 60px; background: var(--danger); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 24px; }
+        .modal-btns { display: flex; gap: 10px; margin-top: 25px; }
+        .m-btn { flex: 1; padding: 14px; border-radius: 15px; border: none; font-weight: 900; cursor: pointer; }
+        .m-yes { background: var(--danger); color: white; }
+        .m-no { background: var(--input-bg); color: var(--text); }
+
+    </style>
+</head>
+<body>
+
+    <div class="phone">
+        <div class="header">
+            <a href="index.html" class="back-link"><i class="fas fa-chevron-right"></i></a>
+            <h3>إعدادات الحساب</h3>
+        </div>
+
+        <div class="content">
+            <div class="profile-pic-container">
+                <img id="userImg" src="" class="profile-pic">
+            </div>
+
+            <div class="info-card">
+                <span class="label"><i class="fas fa-user"></i> اسم المستخدم</span>
+                <input type="text" id="username" class="val" readonly>
+            </div>
+
+            <div class="info-card">
+                <span class="label"><i class="fas fa-envelope"></i> البريد الإلكتروني</span>
+                <input type="email" id="email" class="val" readonly>
+            </div>
+
+            <div class="info-card">
+                <span class="label"><i class="fas fa-lock"></i> كلمة المرور</span>
+                <div class="field-group">
+                    <input type="password" id="pass" class="val" value="********" readonly>
+                    <i class="fas fa-eye eye-btn" onclick="togglePass()"></i>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-save" id="editBtn" onclick="toggleEdit()">
+                    <i class="fas fa-edit"></i> <span id="btnText">تعديل البيانات</span>
+                </button>
+                <button class="btn btn-logout" onclick="openLogoutModal()">
+                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                </button>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="logoutModal">
+            <div class="modal-box">
+                <div class="modal-icon"><i class="fas fa-power-off"></i></div>
+                <h3 style="color:var(--text); font-weight: 900;">تسجيل الخروج؟</h3>
+                <p style="color:var(--p); margin-top: 5px; font-size: 14px;">هل أنت متأكد أنك تريد مغادرة الجلسة؟</p>
+                <div class="modal-btns">
+                    <button class="m-btn m-yes" onclick="confirmLogout()">نعم، خروج</button>
+                    <button class="m-btn m-no" onclick="closeLogoutModal()">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isEditing = false;
+
+        function togglePass() {
+            const p = document.getElementById('pass');
+            const icon = event.target;
+            p.type = p.type === 'password' ? 'text' : 'password';
+            icon.classList.toggle('fa-eye');
+            icon.classList.toggle('fa-eye-slash');
+        }
+
+        function toggleEdit() {
+            isEditing = !isEditing;
+            const fields = ['username', 'email', 'pass'];
+            const btn = document.getElementById('editBtn');
+            const btnText = document.getElementById('btnText');
+
+            fields.forEach(id => {
+                const el = document.getElementById(id);
+                el.readOnly = !isEditing;
+                el.style.borderBottom = isEditing ? "2px solid var(--main)" : "none";
+            });
+
+            if(isEditing) {
+                btnText.innerText = "حفظ التغييرات";
+                btn.style.background = "#2ecc71";
+            } else {
+                localStorage.setItem('username', document.getElementById('username').value);
+                localStorage.setItem('userEmail', document.getElementById('email').value);
+                btnText.innerText = "تعديل البيانات";
+                btn.style.background = "var(--main)";
+                location.reload(); 
+            }
+        }
+
+        function loadData() {
+            const name = localStorage.getItem('username') || "علي قتيبة";
+            const email = localStorage.getItem('userEmail') || "ali@cython.com";
+            document.getElementById('username').value = name;
+            document.getElementById('email').value = email;
+            document.getElementById('userImg').src = `https://ui-avatars.com/api/?name=${name}&background=random&color=fff&size=128&bold=true`;
+        }
+
+        // لوجيك النافذة الجديدة
+        function openLogoutModal() { document.getElementById('logoutModal').classList.add('active'); }
+        function closeLogoutModal() { document.getElementById('logoutModal').classList.remove('active'); }
+
+        function confirmLogout() {
+            localStorage.setItem('isLoggedIn', 'false');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userEmail');
+            window.location.href = "index.html";
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>

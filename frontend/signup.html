@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+    <script>
+        CythonTheme.apply({ dark: '#050505', light: '#f0f2f5' });
+    </script>
+    <title>الانضمام - Cython 2.0</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+
+        :root { 
+            --main: #4facfe; --bg: #f0f2f5; --app: #ffffff; --p: #64748b; --input: #f8fafc; --text: #1a1a1a; 
+            --border: rgba(0,0,0,0.06); --danger: #ff4757; --success: #2ecc71; --warning: #f1c40f;
+        }
+        
+        html.dark { 
+            --bg: #050505; --app: #0f0f0f; --p: #94a3b8; --input: #1a1a1a; --text: #f1f5f9; 
+            --border: rgba(255,255,255,0.06); --danger: #ff5252;
+        }
+
+        /* ثيمات الألوان */
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; caret-color: transparent; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+
+        .phone { 
+            width: 100%; height: 100%; max-width: 500px; 
+            background: var(--app); display: flex; flex-direction: column; 
+            position: relative; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.1);
+        }
+
+        /* الإشعار بحجم نافذة الملف */
+        .app-notification {
+            position: absolute; top: 0; left: 0; right: 0;
+            background: var(--main); color: white;
+            padding: calc(20px + env(safe-area-inset-top)) 20px 20px;
+            z-index: 10000; transform: translateY(-100%);
+            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            font-weight: 800; font-size: 14px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .app-notification.active { transform: translateY(0); }
+        .app-notification.error { background: var(--danger); }
+
+        /* المحتوى */
+        .header { padding: calc(50px + env(safe-area-inset-top)) 30px 10px; text-align: center; }
+        .header i { font-size: 45px; color: var(--main); margin-bottom: 8px; }
+        .header h2 { color: var(--text); font-size: 26px; font-weight: 900; }
+
+        .content { flex: 1; padding: 10px 30px; overflow-y: auto; padding-bottom: 40px; }
+        .field-label { display: block; margin: 0 5px 6px; color: var(--text); font-weight: 700; font-size: 13px; }
+        .field { width: 100%; padding: 15px 20px; border-radius: 20px; border: 2px solid transparent; background: var(--input); display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .field input { background: none; border: none; width: 100%; color: var(--text); font-weight: 700; font-size: 14px; outline: none; caret-color: var(--main); }
+        .field:focus-within { border-color: var(--main); background: var(--app); }
+
+        .strength-meter { height: 4px; width: 90%; background: var(--border); margin: -8px auto 12px; border-radius: 10px; overflow: hidden; }
+        .strength-bar { height: 100%; width: 0%; transition: 0.5s; }
+
+        .btn-signup { width: 100%; padding: 16px; background: var(--main); color: white; border: none; border-radius: 20px; font-weight: 900; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 5px; }
+        .btn-signup:active { transform: scale(0.95); }
+
+        /* أزرار التواصل الاجتماعي المحدثة */
+        .social-divider { display: flex; align-items: center; margin: 20px 0; color: var(--p); font-size: 11px; font-weight: 900; text-transform: uppercase; }
+        .social-divider::before, .social-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); margin: 0 10px; }
+        
+        .social-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .social-btn { height: 45px; border-radius: 15px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; transition: 0.3s; cursor: pointer; }
+        .social-btn:active { transform: scale(0.85); }
+
+        /* مودالات وأنظمة التحميل */
+        .modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 5000; backdrop-filter: blur(8px); }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: var(--app); width: 85%; padding: 25px; border-radius: 35px; text-align: center; border: 1px solid var(--border); }
+
+        #loader { display: none; flex-direction: column; align-items: center; justify-content: center; position: fixed; inset: 0; background: var(--app); z-index: 9999; }
+        .spinner { width: 40px; height: 40px; border: 4px solid var(--input); border-top-color: var(--main); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <p style="margin-top: 15px; font-weight: 900; color: var(--text);">جاري التحميل يا علي...</p>
+    </div>
+
+    <div class="phone">
+        <div class="app-notification" id="appNotif">
+            <i class="fas fa-bell"></i>
+            <span id="notifMsg">تنبيه</span>
+        </div>
+
+        <div class="header">
+            <i class="fas fa-rocket"></i>
+            <h2>انضم لسايثون</h2>
+        </div>
+
+        <div class="content">
+            <form id="signupForm">
+                <span class="field-label">الاسم الكامل</span>
+                <div class="field"><i class="fas fa-user-tie" style="color:var(--main)"></i><input type="text" id="userInput" placeholder="علي قتيبة"></div>
+                
+                <span class="field-label">البريد الإلكتروني</span>
+                <div class="field"><i class="fas fa-envelope" style="color:var(--main)"></i><input type="email" id="emailInput" placeholder="ali@cython.com"></div>
+
+                <span class="field-label">كلمة المرور</span>
+                <div class="field">
+                    <i class="fas fa-lock" style="color:var(--main)"></i>
+                    <input type="password" id="passInput" placeholder="••••••••" oninput="checkStrength(this.value)">
+                    <i class="fas fa-eye" style="color:var(--p); cursor:pointer" onclick="togglePass()"></i>
+                </div>
+                <div class="strength-meter"><div id="strengthBar" class="strength-bar"></div></div>
+
+                <button type="button" class="btn-signup" onclick="validate()">تأكيد الحساب</button>
+                <div style="text-align:center; margin-top:12px; color:var(--main); font-weight:800; font-size:14px; cursor:pointer;" onclick="openModal('guestModal')">الدخول كضيف</div>
+            </form>
+
+            <div class="social-divider">أو سجل عبر التواصل</div>
+            
+            <div class="social-grid">
+                <div class="social-btn" style="background:#ea4335" onclick="quick('Google')"><i class="fab fa-google"></i></div>
+                <div class="social-btn" style="background:#1877f2" onclick="quick('Facebook')"><i class="fab fa-facebook-f"></i></div>
+                <div class="social-btn" style="background:#000" onclick="quick('X')"><i class="fab fa-x-twitter"></i></div>
+                <div class="social-btn" style="background:linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)" onclick="quick('Instagram')"><i class="fab fa-instagram"></i></div>
+                <div class="social-btn" style="background:#000" onclick="quick('TikTok')"><i class="fab fa-tiktok"></i></div>
+            </div>
+
+            <p style="text-align: center; margin-top: 25px; font-weight: 700; color: var(--p); font-size: 13px;">
+                لديك حساب؟ <span onclick="location.href='login.html'" style="color:var(--main); cursor:pointer; font-weight: 900;">سجل دخولك</span>
+            </p>
+        </div>
+
+        <div class="modal-overlay" id="confirmModal">
+            <div class="modal-box">
+                <h3 style="color:var(--text); font-weight:900">تأكيد البيانات</h3>
+                <p style="color:var(--p); font-size:13px; margin:10px 0">هل البيانات صحيحة يا علي؟</p>
+                <div style="display:flex; gap:10px; margin-top:15px">
+                    <button class="btn-signup" style="padding:12px; margin:0" onclick="save()">تأكيد</button>
+                    <button class="btn-signup" style="padding:12px; background:var(--input); color:var(--text); margin:0" onclick="closeModal('confirmModal')">تعديل</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="guestModal">
+            <div class="modal-box">
+                <h3 style="color:var(--text); font-weight:900">دخول الضيف</h3>
+                <div class="field" style="margin-top:15px; background:var(--bg); border:1px solid var(--border)"><input type="text" id="guestName" placeholder="اسمك المستعار..."></div>
+                <button onclick="guestLogin()" class="btn-signup" style="margin:0">انطلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function triggerNotif(msg, type = 'info') {
+            const notif = document.getElementById('appNotif');
+            document.getElementById('notifMsg').innerText = msg;
+            notif.classList.toggle('error', type === 'error');
+            notif.classList.add('active');
+            setTimeout(() => notif.classList.remove('active'), 3000);
+        }
+
+        function togglePass() {
+            const input = document.getElementById('passInput');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        function checkStrength(val) {
+            const bar = document.getElementById('strengthBar');
+            let s = 0;
+            if(val.length > 5) s += 33;
+            if(/[A-Z]/.test(val)) s += 33;
+            if(/[0-9]/.test(val)) s += 34;
+            bar.style.width = s + "%";
+            bar.style.background = s < 40 ? "var(--danger)" : s < 80 ? "var(--warning)" : "var(--success)";
+        }
+
+        function validate() {
+            if(!document.getElementById('userInput').value) return triggerNotif("اكتب اسمك يا علي!", "error");
+            if(!document.getElementById('emailInput').value.includes('@')) return triggerNotif("البريد غير صحيح!", "error");
+            openModal('confirmModal');
+        }
+
+        function quick(p) { save(p + " User", p.toLowerCase() + "@social.com"); }
+
+        function guestLogin() {
+            const name = document.getElementById('guestName').value;
+            if(!name) return triggerNotif("اكتب اسمك المستعار", "error");
+            save(name + " (ضيف)", "guest@cython.com");
+        }
+
+        function save(nInput, eInput) {
+            const name = nInput || document.getElementById('userInput').value;
+            const email = eInput || document.getElementById('emailInput').value;
+            
+            closeModal('confirmModal');
+            document.getElementById('loader').style.display = 'flex';
+            
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('username', name);
+            localStorage.setItem('userEmail', email);
+            localStorage.setItem('joinDate', new Date().toLocaleDateString('ar-EG'));
+            
+            setTimeout(() => window.location.href = "index.html", 2000);
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    </script>
+</body>
+</html>

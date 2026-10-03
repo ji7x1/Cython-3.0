@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+    <script>
+        CythonTheme.apply({ mode: 'dark', color: 'color-1', dark: '#050505', light: '#f0f2f5' });
+        if (sessionStorage.getItem('intro_seen')) window.skipIntroEffect = true;
+    </script>
+    <title>Cython Grandmaster | Ali & Ahmed</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=JetBrains+Mono:wght@500&display=swap');
+        
+        :root { 
+            --main: #4facfe; --bg: #f0f2f5; --app: #ffffff; --text: #1a1a1a; 
+            --glass: rgba(255, 255, 255, 0.75); --border: rgba(0,0,0,0.06); --card: #ffffff;
+        }
+        
+        html.dark { 
+            --bg: #050505; --app: #0f0f0f; --text: #f1f5f9; 
+            --glass: rgba(15, 15, 15, 0.8); --border: rgba(255,255,255,0.08); --card: #1c1c1e;
+        }
+
+
+        * { 
+            margin: 0; padding: 0; box-sizing: border-box; 
+            font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; 
+            user-select: none; caret-color: transparent !important;
+        }
+
+        body { background: var(--bg); height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; transition: background 0.5s; }
+        .phone { width: 100%; height: 100%; max-width: 500px; background: var(--app); display: flex; flex-direction: column; position: relative; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.2); }
+
+        /* الانترو المطور */
+        #splash { 
+            position: absolute; inset: 0; background: var(--app); z-index: 10000; 
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+            transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1), opacity 0.5s;
+        }
+        .splash-logo { font-size: 80px; color: var(--main); filter: drop-shadow(0 0 20px var(--main)); animation: pulse 2s infinite; }
+        .credits { position: absolute; bottom: 40px; font-family: 'JetBrains Mono'; font-size: 10px; font-weight: 500; color: var(--text); opacity: 0.5; letter-spacing: 1px; text-transform: uppercase; text-align: center; }
+
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
+
+        .header { height: 100px; padding: 40px 30px 0; display: flex; justify-content: space-between; align-items: center; z-index: 2000; }
+        .menu-icon { font-size: 28px; color: var(--main); cursor: pointer; transition: 0.3s; }
+
+        .sidebar { 
+            position: absolute; top: 0; right: -100%; width: 85%; height: 100%; 
+            background: var(--glass); backdrop-filter: blur(30px); 
+            z-index: 4000; transition: 0.6s cubic-bezier(0.19, 1, 0.22, 1); 
+            padding: 70px 30px; border-left: 1px solid var(--border); display: flex; flex-direction: column;
+        }
+        .sidebar.active { right: 0; }
+        .side-item { display: flex; align-items: center; gap: 15px; padding: 18px; color: var(--text); font-weight: 700; cursor: pointer; border-radius: 20px; transition: 0.3s; margin-bottom: 5px; }
+        .side-item:active { background: var(--main); color: white; }
+        .side-item i { color: var(--main); font-size: 20px; width: 30px; }
+
+        /* دراور التطبيقات */
+        .drawer {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: var(--glass); backdrop-filter: blur(40px);
+            border-top: 1px solid var(--border); border-radius: 50px 50px 0 0;
+            transition: 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 3000; padding: 15px 25px 50px; height: 170px;
+        }
+        .drawer.open { height: 78%; padding-top: 30px; }
+        .handle { width: 100%; display: flex; justify-content: center; padding-bottom: 25px; cursor: pointer; }
+        .handle-bar { width: 50px; height: 6px; background: var(--main); border-radius: 10px; opacity: 0.2; }
+
+        .apps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; transition: 0.5s; }
+        .drawer.open .apps-grid { grid-template-columns: repeat(3, 1fr); gap: 25px; }
+
+        .app-card { display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; transition: 0.3s; }
+        .app-card:active { transform: scale(0.9); }
+        .icon-box { 
+            width: 65px; height: 65px; background: var(--main); color: #fff; border-radius: 22px; 
+            display: flex; align-items: center; justify-content: center; font-size: 24px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .drawer.open .icon-box { width: 90px; height: 90px; border-radius: 30px; font-size: 35px; }
+        .app-card span { font-size: 12px; font-weight: 800; color: var(--text); opacity: 0.8; }
+
+        .hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 150px; }
+        .hero h1 { font-size: 70px; font-weight: 900; color: var(--main); letter-spacing: -4px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.1)); }
+
+        .theme-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0; }
+        .dot { aspect-ratio: 1; border-radius: 12px; cursor: pointer; border: 2px solid transparent; transition: 0.3s; }
+    </style>
+</head>
+<body>
+
+    <div class="phone" id="phoneBody">
+        <audio id="popSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
+
+        <div id="splash">
+            <i class="fas fa-shuttle-space splash-logo"></i>
+            <h1 style="color:var(--main); margin-top:25px; font-weight:900; letter-spacing:2px;">CYTHON MASTER</h1>
+            <div class="credits">Powered by Ali Qutaiba & Ahmed Zaher</div>
+        </div>
+
+        <div class="sidebar" id="sidebar">
+            <div style="flex: 1; overflow-y: auto;">
+                <h2 style="color:var(--text); font-weight: 900; margin-bottom: 25px; font-size: 28px;">الإعدادات</h2>
+                <p style="font-size: 13px; font-weight: 900; color: var(--main); margin-bottom: 12px; text-transform: uppercase;">Theme Engine</p>
+                <div class="theme-grid" id="themeGrid"></div>
+                <div class="side-item" onclick="toggleD()"><i class="fas fa-moon"></i> وضع النظام</div>
+                <div class="side-item" onclick="exportBackup()"><i class="fas fa-cloud-download-alt"></i> نسخة سحابية</div>
+                <div class="side-item" onclick="document.getElementById('fileInput').click()"><i class="fas fa-cloud-upload-alt"></i> استعادة البيانات</div>
+                <input type="file" id="fileInput" style="display:none" onchange="importBackup(event)">
+            </div>
+            <button onclick="toggleMenu()" style="width: 100%; padding: 20px; background: var(--main); color: white; border: none; border-radius: 22px; font-weight: 900; box-shadow: 0 10px 20px var(--main); margin-top: 20px;">حفظ وإغلاق</button>
+        </div>
+
+        <header class="header">
+            <i class="fas fa-align-right menu-icon" onclick="toggleMenu()"></i>
+            <div onclick="handleLaunch(event, state.isLoggedIn ? 'info.html' : 'signup.html')" style="cursor:pointer;">
+                <div id="userIconContainer"><i class="fas fa-user-astronaut" style="color:var(--main); font-size:32px;"></i></div>
+            </div>
+        </header>
+
+        <main class="hero">
+            <h1 id="brandName">CYTHON</h1>
+            <div id="authArea" style="margin-top:25px;"></div>
+        </main>
+
+        <div class="drawer" id="drawer">
+            <div class="handle" onclick="toggleDrawer()"><div class="handle-bar"></div></div>
+            <div class="apps-grid">
+                <div class="app-card" onclick="handleLaunch(event, 'chat.html')"><div class="icon-box"><i class="fas fa-comment-dots"></i></div><span>الدردشة</span></div>
+                <div class="app-card" onclick="handleLaunch(event, 'vault.html')"><div class="icon-box"><i class="fas fa-fingerprint"></i></div><span>الخزنة</span></div>
+                <div class="app-card" onclick="handleLaunch(event, 'games.html')"><div class="icon-box"><i class="fas fa-gamepad"></i></div><span>الألعاب</span></div>
+                <div class="app-card" onclick="handleLaunch(event, 'note.html')"><div class="icon-box"><i class="fas fa-edit"></i></div><span>الملاحظات</span></div>
+                <div class="app-card" onclick="handleLaunch(event, 'habits.html')"><div class="icon-box"><i class="fas fa-tasks"></i></div><span>المهام</span></div>
+                
+                <div class="app-card" onclick="handleLaunch(event, 'colom.html')">
+                    <div class="icon-box"><i class="fas fa-table-list"></i></div>
+                    <span>الجداول</span>
+                </div>
+
+                <div class="app-card" onclick="handleLaunch(event, 'alarm.html')"><div class="icon-box"><i class="fas fa-clock"></i></div><span>المؤقت</span></div>
+                <div class="app-card" onclick="handleLaunch(event, 'camera.html')"><div class="icon-box"><i class="fas fa-camera"></i></div><span>الكاميرا</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const state = {
+            isLoggedIn: localStorage.getItem('isLoggedIn') === 'true',
+            user: localStorage.getItem('username') || 'ضيف'
+        };
+
+        function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); }
+        function toggleDrawer() { document.getElementById('drawer').classList.toggle('open'); }
+
+        function handleLaunch(e, page) {
+            document.getElementById('popSound').play().catch(()=>{});
+            setTimeout(() => { location.href = page; }, 200);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const splash = document.getElementById('splash');
+            if (window.skipIntroEffect) {
+                splash.style.display = 'none';
+            } else {
+                setTimeout(() => {
+                    splash.style.opacity = '0';
+                    splash.style.transform = 'scale(1.2)';
+                    sessionStorage.setItem('intro_seen', 'true');
+                    setTimeout(() => splash.style.display = 'none', 800);
+                }, 2500);
+            }
+
+            const colors = ['#4facfe','#ff4757','#2ecc71','#a29bfe','#f1c40f','#e84393','#00d2d3','#54a0ff','#ae8b70','#34495e'];
+            const grid = document.getElementById('themeGrid');
+            colors.forEach((c, i) => {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.style.background = c;
+                dot.onclick = () => {
+                    document.documentElement.className = '';
+                    if(localStorage.getItem('themeMode')==='dark') document.documentElement.classList.add('dark');
+                    document.documentElement.classList.add('color-' + (i+1));
+                    localStorage.setItem('themeColor', 'color-' + (i+1));
+                };
+                grid.appendChild(dot);
+            });
+
+            const authArea = document.getElementById('authArea');
+            const userIcon = document.getElementById('userIconContainer');
+            if (state.isLoggedIn) {
+                userIcon.innerHTML = `<img src="https://ui-avatars.com/api/?name=${state.user}&background=random&color=fff" style="width:40px; height:40px; border-radius:15px; border:2px solid var(--main); object-fit: cover;">`;
+                authArea.innerHTML = `<div style="color:var(--text); font-size:24px; font-weight:900;">مرحباً، <span style="color:var(--main)">${state.user}</span></div>`;
+            } else {
+                authArea.innerHTML = `<button onclick="location.href='signup.html'" style="background:var(--main); color:#fff; padding:18px 60px; border-radius:25px; border:none; font-weight:900; box-shadow: 0 10px 20px var(--main); font-size:16px;">ابدأ الرحلة</button>`;
+            }
+        });
+
+        function toggleD() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('themeMode', isDark ? 'dark' : 'light');
+            document.documentElement.style.backgroundColor = isDark ? '#050505' : '#f0f2f5';
+        }
+    </script>
+</body>
+</html>

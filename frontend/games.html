@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+    <script>
+        CythonTheme.apply({ color: 'color-1' });
+    </script>
+    <title>Cython Games Pro - Ali Qutaiba</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+
+        :root { 
+            --main: #4facfe; --bg: #f0f2f5; --app: #ffffff; --text: #1a1a1a; 
+            --card: #ffffff; --cell: #f8fafc; --border: rgba(0,0,0,0.06);
+            --sh: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        /* الربط العشري المحرم */
+
+        html.dark { 
+            --bg: #050505; --app: #0f0f0f; --text: #f1f5f9; 
+            --card: #161b22; --cell: #1c2128; --border: rgba(255,255,255,0.05);
+            --sh: 0 15px 40px rgba(0,0,0,0.4);
+        }
+
+        * { 
+            margin: 0; padding: 0; box-sizing: border-box; 
+            font-family: 'Cairo', sans-serif; 
+            caret-color: transparent !important; user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body { background: var(--bg); height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+
+        .phone { 
+            width: 100%; height: 100%; max-width: 500px; 
+            background: var(--app); display: flex; flex-direction: column; 
+            position: relative; overflow: hidden; transition: transform 0.2s;
+        }
+
+        /* هيدر زجاجي */
+        .header { 
+            height: 90px; padding: 30px 20px 10px; 
+            background: var(--app); display: flex; 
+            justify-content: space-between; align-items: center; z-index: 1000;
+            border-bottom: 1px solid var(--border);
+        }
+        .header h1 { font-size: 22px; font-weight: 900; color: var(--main); }
+        .back-btn { color: var(--text); font-size: 24px; padding: 5px; }
+
+        .games-grid { 
+            flex: 1; padding: 25px; overflow-y: auto; background: var(--bg); 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-content: start;
+        }
+
+        .game-card { 
+            background: var(--card); padding: 30px 15px; border-radius: 35px; 
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            gap: 15px; border: 1px solid var(--border); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: var(--sh);
+        }
+        .game-card:active { transform: scale(0.9) rotate(2deg); }
+        .game-card i { font-size: 40px; color: var(--main); filter: drop-shadow(0 5px 10px var(--main)); }
+        .game-card h3 { font-size: 15px; color: var(--text); font-weight: 900; }
+
+        /* مسرح اللعب */
+        #gameStage { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 20px; z-index: 50; }
+        
+        .cell { 
+            width: 80px; height: 80px; background: var(--cell); border-radius: 25px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 35px; font-weight: 900; color: var(--text); 
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.02);
+        }
+        .cell:active { transform: scale(0.85); }
+
+        /* شاشة النهاية (The Forbidden Result) */
+        #overlay { 
+            position: absolute; inset: 0; background: rgba(0,0,0,0.8); 
+            z-index: 9000; display: none; flex-direction: column; 
+            justify-content: center; align-items: center; backdrop-filter: blur(20px); 
+        }
+        #overlay.active { display: flex; animation: fadeIn 0.4s forwards; }
+
+        .btn-retry { 
+            background: #2ecc71 !important; color: white; border: none; 
+            padding: 20px 60px; border-radius: 25px; font-weight: 900; 
+            cursor: pointer; width: 280px; margin-bottom: 15px; font-size: 20px;
+            box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
+        }
+        .btn-exit { background: #ff4757; color: white; border: none; padding: 20px 60px; border-radius: 25px; font-weight: 900; width: 280px; box-shadow: 0 10px 20px rgba(255, 71, 87, 0.3); }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+        .shaking { animation: shake 0.2s 3; }
+
+        canvas { border-radius: 40px; border: 5px solid var(--main); background: #000; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+
+<div class="phone" id="phoneWrapper">
+    <audio id="pop" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
+
+    <div id="overlay">
+        <div id="resView" style="text-align: center;">
+            <div id="resIcon" style="font-size: 90px; margin-bottom: 15px; filter: drop-shadow(0 10px 20px rgba(255,255,255,0.2));">🏆</div>
+            <h2 id="resMsg" style="color:white; margin-bottom:45px; font-size: 28px; font-weight: 900;">رائع!</h2>
+            <button id="btnRetry" class="btn-retry">جولة أخرى</button><br>
+            <button class="btn-exit" onclick="location.reload()">استسلام</button>
+        </div>
+        <div id="countView" style="display:none;"><h1 style="font-size: 120px; color: var(--main); font-weight: 900;" id="countNum">3</h1></div>
+    </div>
+
+    <div class="header">
+        <a href="index.html" class="back-btn"><i class="fas fa-chevron-right"></i></a>
+        <h1>CYTHON ARENA</h1>
+        <div id="userTag" style="font-weight: 900; font-size: 12px; color: var(--main); opacity: 0.8;">PRO</div>
+    </div>
+
+    <div class="games-grid" id="menu">
+        <div class="game-card" onclick="startFlow('xo2')"><i class="fas fa-user-friends"></i><h3>تحدي الأصدقاء</h3></div>
+        <div class="game-card" onclick="startFlow('xo')"><i class="fas fa-brain"></i><h3>ذكاء سايثون</h3></div>
+        <div class="game-card" onclick="startFlow('mem')"><i class="fas fa-layer-group"></i><h3>تطابق النيون</h3></div>
+        <div class="game-card" onclick="startFlow('dodge')"><i class="fas fa-space-shuttle"></i><h3>هروب الفضاء</h3></div>
+        <div class="game-card" onclick="startFlow('tap')"><i class="fas fa-fingerprint"></i><h3>سرعة النقرة</h3></div>
+        <div class="game-card" onclick="startFlow('math')"><i class="fas fa-square-root-variable"></i><h3>تحدي العباقرة</h3></div>
+    </div>
+
+    <div id="gameStage">
+        <div id="gameContent" style="width:100%; display:flex; flex-direction:column; align-items:center;"></div>
+    </div>
+</div>
+
+<script>
+    let currentKey = '', gameLoop = null;
+    const pop = document.getElementById('pop');
+    const phone = document.getElementById('phoneWrapper');
+
+    function startFlow(key) {
+        currentKey = key;
+        document.getElementById('menu').style.display = 'none';
+        document.getElementById('overlay').classList.add('active');
+        document.getElementById('resView').style.display = 'none';
+        document.getElementById('countView').style.display = 'block';
+        
+        let c = 3; 
+        const countNum = document.getElementById('countNum');
+        countNum.innerText = c;
+        
+        let t = setInterval(() => {
+            c--; 
+            if(c > 0) {
+                countNum.innerText = c;
+                countNum.style.transform = "scale(1.5)";
+                setTimeout(()=>countNum.style.transform="scale(1)", 200);
+            } else { 
+                clearInterval(t); 
+                document.getElementById('overlay').classList.remove('active'); 
+                document.getElementById('gameStage').style.display = 'flex'; 
+                loadGame(key); 
+            }
+        }, 800);
+    }
+
+    function showEnd(msg, icon="🏆", isLose=false) {
+        clearInterval(gameLoop);
+        if(isLose) {
+            phone.classList.add('shaking');
+            setTimeout(()=>phone.classList.remove('shaking'), 400);
+        }
+        document.getElementById('overlay').classList.add('active');
+        document.getElementById('resView').style.display = 'block';
+        document.getElementById('countView').style.display = 'none';
+        document.getElementById('resMsg').innerText = msg;
+        document.getElementById('resIcon').innerText = icon;
+        document.getElementById('btnRetry').onclick = () => { 
+            document.getElementById('overlay').classList.remove('active'); 
+            loadGame(currentKey); 
+        };
+    }
+
+    function loadGame(k) {
+        const stage = document.getElementById('gameContent'); stage.innerHTML = '';
+        const clr = getComputedStyle(document.documentElement).getPropertyValue('--main').trim();
+        
+        if(k === 'xo2' || k === 'xo') initXO(stage, clr, k === 'xo');
+        if(k === 'mem') initMem(stage, clr);
+        if(k === 'dodge') initDodge(stage, clr);
+        if(k === 'tap') initTap(stage, clr);
+        if(k === 'math') initMath(stage, clr);
+    }
+
+    // --- XO Engine ---
+    function initXO(stage, clr, vsAI) {
+        let b = Array(9).fill(null), turn = 'X';
+        const draw = () => {
+            stage.innerHTML = `<div style="display:grid; grid-template-columns:repeat(3,85px); gap:15px;">${b.map((v,i)=>`<div class="cell" onclick="handleXO(${i})">${v||''}</div>`).join('')}</div>`;
+            document.querySelectorAll('.cell').forEach(el => {
+                if(el.innerText==='X') el.style.color=clr;
+                if(el.innerText==='O') el.style.color='#ff4757';
+            });
+        };
+        window.handleXO = (i) => {
+            if(b[i]) return; b[i]=turn; draw();
+            if(checkW(b)) return showEnd("فوز ساحق لـ " + turn);
+            if(!b.includes(null)) return showEnd("تعادل الأبطال", "🤝");
+            turn = turn==='X'?'O':'X';
+            if(vsAI && turn==='O') {
+                setTimeout(() => {
+                    let move = findBestMove(b);
+                    b[move] = 'O'; turn = 'X'; draw();
+                    if(checkW(b)) showEnd("سايثون هزمك!", "🤖", true);
+                }, 500);
+            }
+        };
+        draw();
+    }
+
+    // --- Dodge Pro Engine ---
+    function initDodge(stage, clr) {
+        stage.innerHTML = `<canvas id="c" width="320" height="400"></canvas>
+        <div style="display:flex; gap:30px; margin-top:30px;">
+            <button class="cell" style="width:120px; background:${clr}; color:white;" onpointerdown="window.vx=-12" onpointerup="window.vx=0"><i class="fas fa-arrow-left"></i></button>
+            <button class="cell" style="width:120px; background:${clr}; color:white;" onpointerdown="window.vx=12" onpointerup="window.vx=0"><i class="fas fa-arrow-right"></i></button>
+        </div>`;
+        const ctx = document.getElementById('c').getContext('2d');
+        let px = 140, obs = [], score = 0; window.vx = 0;
+        gameLoop = setInterval(() => {
+            ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.fillRect(0,0,320,400);
+            px += window.vx; px = Math.max(10, Math.min(270, px));
+            ctx.shadowBlur = 15; ctx.shadowColor = clr; ctx.fillStyle = clr;
+            ctx.fillRect(px, 350, 40, 15);
+            if(Math.random()<0.07) obs.push({x:Math.random()*300, y:-20, s:6+score/10});
+            obs.forEach((o,i)=>{
+                o.y += o.s; ctx.shadowColor = "#ff4757"; ctx.fillStyle = "#ff4757";
+                ctx.beginPath(); ctx.arc(o.x, o.y, 8, 0, 7); ctx.fill();
+                if(o.y>350 && o.x>px && o.x<px+40) showEnd("النتيجة: "+score, "💥", true);
+                if(o.y>410) { obs.splice(i,1); score++; }
+            });
+        }, 1000/60);
+    }
+
+    // --- Math Pro ---
+    function initMath(stage, clr) {
+        let a = Math.floor(Math.random()*50)+10, b = Math.floor(Math.random()*50)+10, op = Math.random()>0.5?'+':'-';
+        let res = op==='+'? a+b : a-b;
+        let ans = [res, res+Math.floor(Math.random()*5+1), res-Math.floor(Math.random()*5+1), res+10].sort(()=>Math.random()-0.5);
+        stage.innerHTML = `<h1 style="font-size:70px; color:${clr}; margin-bottom:40px; font-weight:900;">${a} ${op} ${b}</h1>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; width:100%">${ans.map(n=>`<button class="cell" style="width:100%" onclick="window.ansM(${n},${res})">${n}</button>`).join('')}</div>`;
+        window.ansM = (n, r) => { if(n===r) showEnd("عبقري!"); else showEnd("خطأ! كان " + r, "❌", true); };
+    }
+
+    // --- Memory Neon ---
+    function initMem(stage, clr) {
+        let icons = ['🔥','💎','⚡','🤖','👾','⭐','🍀','🍎'];
+        let deck = [...icons, ...icons].sort(()=>Math.random()-0.5);
+        let flipped = [], match = 0;
+        stage.innerHTML = `<div style="display:grid; grid-template-columns:repeat(4,75px); gap:12px;">${deck.map((ic,i)=>`<div class="cell" style="font-size:0" onclick="window.flipM(this,'${ic}')">?</div>`).join('')}</div>`;
+        window.flipM = (el, ic) => {
+            if(el.style.fontSize!=='0px' || flipped.length===2) return;
+            el.innerText = ic; el.style.fontSize = '30px'; el.style.background = clr; el.style.color = 'white';
+            flipped.push({el, ic});
+            if(flipped.length===2) {
+                if(flipped[0].ic === flipped[1].ic) { match++; flipped = []; if(match===8) showEnd("ذاكرة حديدية!"); }
+                else { setTimeout(()=>{ flipped.forEach(f=>{f.el.innerText='?'; f.el.style.fontSize='0'; f.el.style.background='var(--cell)'; f.el.style.color='var(--text)'}); flipped=[]; }, 500); }
+            }
+        };
+    }
+
+    // --- Tap Speed ---
+    function initTap(stage, clr) {
+        let s = 0, t = 10;
+        stage.innerHTML = `<div id="circle" class="cell" style="width:180px; height:180px; border-radius:50%; border:8px solid ${clr}; font-size:20px;" onclick="window.tp()">انقر!</div>
+        <h2 style="margin-top:30px; font-weight:900; color:var(--text)">السرعة: <span id="val" style="color:${clr}">0</span></h2>
+        <p style="color:var(--text); opacity:0.5;">الوقت المتبقي: <span id="timer">10</span> ثانية</p>`;
+        window.tp = () => { s++; document.getElementById('val').innerText = s; document.getElementById('circle').style.transform = "scale(0.9)"; setTimeout(()=>document.getElementById('circle').style.transform="scale(1)", 50); };
+        gameLoop = setInterval(() => { t--; document.getElementById('timer').innerText = t; if(t<=0) showEnd("نقراتك: "+s, "⚡"); }, 1000);
+    }
+
+    function checkW(b) {
+        const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        return lines.find(l => b[l[0]] && b[l[0]] === b[l[1]] && b[l[0]] === b[l[2]]);
+    }
+
+    function findBestMove(b) {
+        // AI بسيط جداً للـ XO
+        let empty = b.map((v,i)=>v===null?i:null).filter(v=>v!==null);
+        return empty[Math.floor(Math.random()*empty.length)];
+    }
+</script>
+</body>
+</html>

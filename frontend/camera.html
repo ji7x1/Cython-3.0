@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-palette="soft">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+    <script>
+        CythonTheme.apply({ dark: '#000000', light: '#f4f7f9' });
+    </script>
+    <title>Cython Pro Camera</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+        
+        :root { 
+            --main: #4facfe; 
+            --app: #ffffff; 
+            --bg: #f4f7f9; 
+            --text: #333;
+        }
+
+        /* أنظمة الألوان العشرة المرتبطة بالرئيسية */
+
+        /* تعديلات الوضع الليلي */
+        html.dark { 
+            --app: #111; 
+            --bg: #000; 
+            --text: #eee;
+        }
+        
+        * { 
+            margin: 0; padding: 0; box-sizing: border-box; 
+            font-family: 'Cairo', sans-serif; 
+            caret-color: transparent !important; 
+            outline: none !important; 
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        
+        body { background: var(--bg); height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; transition: 0.5s; }
+
+        .phone { 
+            width: 100%; height: 100%; max-width: 500px; 
+            background: #000; display: flex; flex-direction: column; overflow: hidden; position: relative; 
+        }
+
+        #video-container { position: absolute; inset: 0; z-index: 1; transition: 0.3s; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+
+        .top-bar { 
+            position: absolute; top: env(safe-area-inset-top, 20px); 
+            width: 100%; padding: 10px 20px; display: flex; justify-content: space-between; z-index: 100; 
+        }
+        
+        .icon-btn { 
+            width: 45px; height: 45px; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            color: white; border: 1px solid rgba(255,255,255,0.2); transition: 0.3s;
+        }
+        .icon-btn:active { transform: scale(0.9); }
+
+        /* الستايل المرتبط بالثيم المختار */
+        .flash-on-style { color: var(--main) !important; filter: drop-shadow(0 0 10px var(--main)); transform: scale(1.1); }
+
+        .bottom-nav { 
+            position: absolute; bottom: 0; width: 100%; 
+            height: calc(120px + env(safe-area-inset-bottom)); 
+            background: linear-gradient(transparent, rgba(0,0,0,0.9)); 
+            z-index: 10; display: flex; justify-content: space-around; align-items: center; 
+            padding-bottom: env(safe-area-inset-bottom); 
+        }
+        
+        .shutter { width: 75px; height: 75px; border-radius: 50%; border: 4px solid #fff; padding: 5px; cursor: pointer; }
+        .shutter-in { width: 100%; height: 100%; background: #fff; border-radius: 50%; transition: 0.2s; }
+        .shutter-in:active { transform: scale(0.85); background: var(--main); }
+
+        .gallery-btn { 
+            width: 55px; height: 55px; border-radius: 15px; border: 2px solid #fff; 
+            background: rgba(255,255,255,0.1); overflow: hidden; position: relative;
+        }
+        .count-badge { 
+            position: absolute; top: -5px; right: -5px; background: var(--main); 
+            color: white; font-size: 11px; width: 22px; height: 22px; 
+            display: flex; align-items: center; justify-content: center; border-radius: 50%; 
+            border: 2px solid #000; font-weight: bold;
+        }
+
+        .gallery-overlay { 
+            position: absolute; inset: 0; background: var(--app); 
+            z-index: 200; display: none; flex-direction: column; padding: 40px 20px; 
+            color: var(--text);
+        }
+
+        .action-btn { 
+            width: 100%; padding: 16px; border: none; border-radius: 20px; 
+            font-weight: 900; margin-bottom: 12px; font-size: 16px;
+        }
+        .btn-pdf { background: var(--main); color: white; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+    <div class="phone">
+        <div id="flash-overlay" style="position:absolute; inset:0; background:white; opacity:0; z-index:5; pointer-events:none;"></div>
+        <div id="video-container"><video id="webcam" autoplay playsinline></video></div>
+
+        <div class="top-bar">
+            <div class="icon-btn" onclick="toggleFlash()"><i id="flash-icon" class="fas fa-bolt"></i></div>
+            <div class="icon-btn" onclick="switchCamera()"><i class="fas fa-camera-rotate"></i></div>
+            <div class="icon-btn" onclick="window.location.href='index.html'"><i class="fas fa-times"></i></div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="gallery-btn" onclick="showGallery()">
+                <img id="last-thumb" style="width:100%; height:100%; object-fit:cover; display:none;">
+                <i id="gallery-placeholder" class="fas fa-images" style="color:white; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);"></i>
+                <span class="count-badge" id="img-count">0</span>
+            </div>
+            
+            <div class="shutter" onclick="capture()"><div class="shutter-in"></div></div>
+            
+            <div class="icon-btn" onclick="location.reload()"><i class="fas fa-arrows-rotate"></i></div>
+        </div>
+
+        <div id="gallery-ui" class="gallery-overlay">
+            <h2 style="text-align:center; margin-bottom:20px; color:var(--main)">معرض Cython</h2>
+            <div id="images-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; flex:1; overflow-y:auto;"></div>
+            
+            <div style="margin-top:20px">
+                <button class="action-btn btn-pdf" onclick="exportPDF()"><i class="fas fa-file-pdf"></i> حفظ كـ PDF</button>
+                <button onclick="hideGallery()" style="width:100%; background:none; border:none; color:var(--text); font-weight:bold;">العودة للكاميرا</button>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="canvas" style="display:none"></canvas>
+
+    <script>
+        let images = [];
+        let stream;
+        let isFront = false;
+        let flashActive = false;
+
+        async function init() {
+            if (stream) stream.getTracks().forEach(t => t.stop());
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: isFront ? 'user' : 'environment' } 
+                });
+                document.getElementById('webcam').srcObject = stream;
+            } catch (e) { alert("الكاميرا غير متاحة"); }
+        }
+
+        function toggleFlash() {
+            flashActive = !flashActive;
+            const icon = document.getElementById('flash-icon');
+            icon.className = flashActive ? "fas fa-bolt flash-on-style" : "fas fa-bolt";
+            document.getElementById('video-container').style.filter = flashActive ? "brightness(1.3)" : "none";
+        }
+
+        function capture() {
+            const overlay = document.getElementById('flash-overlay');
+            overlay.style.opacity = "1";
+            setTimeout(() => overlay.style.opacity = "0", 100);
+
+            const v = document.getElementById('webcam'), c = document.getElementById('canvas');
+            c.width = v.videoWidth; c.height = v.videoHeight;
+            c.getContext('2d').drawImage(v, 0, 0);
+            
+            const img = c.toDataURL('image/jpeg');
+            images.push(img);
+            
+            document.getElementById('last-thumb').src = img;
+            document.getElementById('last-thumb').style.display = "block";
+            document.getElementById('gallery-placeholder').style.display = "none";
+            document.getElementById('img-count').innerText = images.length;
+        }
+
+        function showGallery() {
+            const grid = document.getElementById('images-grid');
+            grid.innerHTML = images.map(src => `<img src="${src}" style="width:100%; border-radius:10px;">`).join('');
+            document.getElementById('gallery-ui').style.display = 'flex';
+        }
+
+        function hideGallery() { document.getElementById('gallery-ui').style.display = 'none'; }
+        function switchCamera() { isFront = !isFront; init(); }
+
+        async function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF();
+            images.forEach((img, i) => {
+                if (i > 0) pdf.addPage();
+                pdf.addImage(img, 'JPEG', 10, 10, 190, 150);
+            });
+            pdf.save("Cython_Pro_Photos.pdf");
+        }
+
+        init();
+    </script>
+</body>
+</html>

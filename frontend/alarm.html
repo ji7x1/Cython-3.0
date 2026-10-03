@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <script src="script.js"></script>
+    <script>
+        CythonTheme.apply({ mode: 'dark', color: 'color-1', dark: '#0a0a0a', light: '#f4f7f9' });
+        // أمر قتل الانترو: نضع علامة في ذاكرة المتصفح أننا تجاوزنا المقدمة
+        localStorage.setItem('skipIntro', 'true');
+        sessionStorage.setItem('intro_done', 'true');
+    </script>
+    <title>Focus Ultra | Ali Qutaiba</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=JetBrains+Mono:wght@100;400;800&display=swap');
+        
+        :root { 
+            --main: #4facfe; --bg: #f4f7f9; --app: #ffffff; --text: #1a1a1a; 
+            --border: rgba(0,0,0,0.05); --retry-green: #2ecc71;
+            --glass: rgba(255, 255, 255, 0.8);
+        }
+        
+        html.dark { 
+            --bg: #0a0a0a; --app: #121212; --text: #f5f5f5; 
+            --border: rgba(255,255,255,0.06); --glass: rgba(18, 18, 18, 0.8);
+        }
+
+        /* ثيمات علي الخاصة */
+        html.color-1 { --main: #4facfe; } html.color-2 { --main: #ff4757; }
+        html.color-3 { --main: #2ecc71; } html.color-4 { --main: #a29bfe; }
+        html.color-5 { --main: #f1c40f; } html.color-6 { --main: #e84393; }
+        html.color-7 { --main: #00d2d3; } html.color-8 { --main: #54a0ff; }
+
+        * { 
+            margin: 0; padding: 0; box-sizing: border-box; 
+            font-family: 'Cairo', sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            caret-color: transparent !important;
+        }
+
+        body { background: var(--bg); height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        .phone { width: 100%; height: 100%; max-width: 500px; background: var(--app); display: flex; flex-direction: column; position: relative; }
+
+        .header { height: 90px; padding: 35px 25px 10px; display: flex; justify-content: space-between; align-items: center; z-index: 100; }
+        .back-btn { width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; color: var(--main); font-size: 18px; cursor: pointer; border-radius: 15px; background: var(--glass); border: 1px solid var(--border); transition: 0.3s; }
+        .back-btn:active { transform: scale(0.85); }
+        
+        .edit-btn { color: var(--main); font-weight: 900; opacity: 0; pointer-events: none; transition: 0.3s; cursor: pointer; }
+        .edit-btn.show { opacity: 1; pointer-events: auto; }
+
+        .nav-pill { background: var(--bg); margin: 10px 25px; padding: 5px; border-radius: 20px; display: flex; position: relative; border: 1px solid var(--border); height: 55px; }
+        .tab { flex: 1; text-align: center; line-height: 45px; font-weight: 900; font-size: 14px; color: var(--text); z-index: 5; cursor: pointer; }
+        .slider { position: absolute; width: calc(50% - 10px); height: 45px; background: var(--main); border-radius: 16px; top: 5px; right: 5px; transition: 0.4s cubic-bezier(0.6, 0, 0.2, 1); z-index: 1; }
+        .tab.active { color: #fff; }
+
+        .view-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .timer-shell { position: relative; width: 280px; height: 280px; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; }
+        .ring-svg { width: 100%; height: 100%; transform: rotate(-90deg); position: absolute; }
+        .track { fill: none; stroke: var(--border); stroke-width: 5; }
+        .fill { fill: none; stroke: var(--main); stroke-width: 8; stroke-linecap: round; stroke-dasharray: 848; stroke-dashoffset: 848; transition: 0.3s linear; }
+        .time-text { font-family: 'JetBrains Mono'; font-size: 50px; color: var(--text); font-weight: 100; z-index: 2; }
+
+        .quick-actions { display: flex; gap: 8px; margin-bottom: 30px; }
+        .capsule { background: var(--bg); border: 1px solid var(--border); padding: 12px 18px; border-radius: 15px; color: var(--text); font-size: 13px; font-weight: 800; cursor: pointer; }
+        .capsule.special { background: var(--main); color: white; border: none; }
+
+        .main-controls { display: flex; gap: 30px; align-items: center; }
+        .btn-circle { width: 75px; height: 75px; border-radius: 50%; border: none; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        
+        /* طلب علي: زر الرجوع دائماً أخضر */
+        .btn-retry { background: transparent; color: var(--retry-green); border: 2.5px solid var(--retry-green); }
+        .btn-play { background: var(--main); color: white; box-shadow: 0 10px 25px -5px var(--main); }
+
+        .alarm-scroll { display: none; padding: 10px 25px; overflow-y: auto; flex: 1; width: 100%; }
+        .alarm-card { background: var(--bg); padding: 20px; border-radius: 25px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border: 1px solid var(--border); }
+        .alarm-time-val { font-family: 'JetBrains Mono'; font-size: 38px; color: var(--text); }
+        
+        .ios-toggle { width: 50px; height: 28px; background: #333; border-radius: 20px; position: relative; cursor: pointer; transition: 0.3s; }
+        .ios-toggle::after { content: ''; position: absolute; width: 24px; height: 24px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: 0.3s; }
+        .ios-toggle.on { background: var(--retry-green); }
+        .ios-toggle.on::after { left: 24px; }
+
+        .add-fab { position: absolute; bottom: 30px; left: 30px; width: 65px; height: 65px; background: var(--main); color: white; border-radius: 20px; display: none; align-items: center; justify-content: center; font-size: 25px; border: none; box-shadow: 0 10px 20px var(--main); }
+
+        .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); display: none; align-items: flex-end; z-index: 2000; }
+        .sheet { width: 100%; background: var(--app); border-radius: 40px 40px 0 0; padding: 30px; transform: translateY(100%); transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        .sheet.up { transform: translateY(0); }
+    </style>
+</head>
+<body>
+
+    <div class="phone">
+        <div class="overlay" id="overlay" onclick="closeM()">
+            <div class="sheet" id="sheet" onclick="event.stopPropagation()">
+                <div style="width: 40px; height: 4px; background: var(--border); border-radius: 10px; margin: 0 auto 20px;"></div>
+                <h3 id="mTitle" style="text-align:center; color:var(--text); font-weight: 900;">ضبط الوقت</h3>
+                <div style="display:flex; justify-content:center; align-items:center; gap:20px; margin:30px 0;">
+                    <div style="text-align:center">
+                        <div class="p-num" id="vh" style="font-size:50px; font-family:'JetBrains Mono'; color:var(--text);">12</div>
+                        <div style="display:flex; gap:10px; margin-top:10px;">
+                            <button onclick="adj('h',-1)" style="padding:15px; border-radius:12px; border:none; background:var(--bg); color:var(--main);"><i class="fas fa-minus"></i></button>
+                            <button onclick="adj('h',1)" style="padding:15px; border-radius:12px; border:none; background:var(--bg); color:var(--main);"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <span style="font-size:40px; color:var(--main); opacity:0.5;">:</span>
+                    <div style="text-align:center">
+                        <div class="p-num" id="vm" style="font-size:50px; font-family:'JetBrains Mono'; color:var(--text);">00</div>
+                        <div style="display:flex; gap:10px; margin-top:10px;">
+                            <button onclick="adj('m',-1)" style="padding:15px; border-radius:12px; border:none; background:var(--bg); color:var(--main);"><i class="fas fa-minus"></i></button>
+                            <button onclick="adj('m',1)" style="padding:15px; border-radius:12px; border:none; background:var(--bg); color:var(--main);"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div id="apBox" style="text-align:center; margin-bottom:30px;">
+                    <button id="vAp" onclick="tAp()" style="padding:12px 45px; border-radius:15px; border:2px solid var(--main); background:transparent; color:var(--main); font-weight:900;">AM</button>
+                </div>
+                <button style="width:100%; padding:22px; border-radius:22px; border:none; background:var(--main); color:white; font-weight:900;" onclick="save()">تـأكـيـد</button>
+            </div>
+        </div>
+
+        <div class="header">
+            <div class="back-btn" onclick="killIntroAndGo()"><i class="fas fa-chevron-right"></i></div>
+            <span class="edit-btn" id="editBtn" onclick="toggleEdit()">تعديل</span>
+        </div>
+
+        <div class="nav-pill">
+            <div class="slider" id="slid"></div>
+            <div class="tab active" onclick="switchMode('T')">المؤقت</div>
+            <div class="tab" onclick="switchMode('A')">المنبه</div>
+        </div>
+
+        <div class="view-content" id="timerView">
+            <div class="timer-shell">
+                <svg class="ring-svg"><circle class="track" cx="140" cy="140" r="135"></circle><circle id="fill" class="fill" cx="140" cy="140" r="135"></circle></svg>
+                <div class="time-text" id="timeDigits">00:00:00</div>
+            </div>
+            <div class="quick-actions">
+                <div class="capsule" onclick="quickSet(5)">5 د</div>
+                <div class="capsule" onclick="quickSet(25)">25 د</div>
+                <div class="capsule special" onclick="openM('T')"><i class="fas fa-clock"></i></div>
+            </div>
+            <div class="main-controls">
+                <button class="btn-circle btn-retry" onclick="resetT()"><i class="fas fa-rotate-right"></i></button>
+                <button class="btn-circle btn-play" id="playBtn" onclick="toggleT()"><i class="fas fa-play"></i></button>
+            </div>
+        </div>
+
+        <div class="alarm-scroll" id="alarmView">
+            <div id="alarmContainer"></div>
+        </div>
+        
+        <button class="add-fab" id="fab" onclick="openM('A')"><i class="fas fa-plus"></i></button>
+    </div>
+
+    <script>
+        let mode='T', timer=null, timeLeft=0, totalTime=0;
+        let sh=12, sm=0, sap='AM', task='T', editing=false;
+        let alarms = JSON.parse(localStorage.getItem('cythonAlarms')) || [];
+
+        // دالة العودة "المحرمة": تضمن لـ علي عدم رؤية الانترو مجدداً
+        function killIntroAndGo() {
+            localStorage.setItem('skipIntro', 'true');
+            sessionStorage.setItem('intro_done', 'true');
+            window.location.href = 'index.html';
+        }
+
+        function switchMode(m) {
+            mode = m;
+            document.getElementById('slid').style.transform = m==='T' ? 'translateX(0)' : 'translateX(-100%)';
+            document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', (i===0 && m==='T') || (i===1 && m==='A')));
+            document.getElementById('timerView').style.display = m==='T' ? 'flex' : 'none';
+            document.getElementById('alarmView').style.display = m==='A' ? 'block' : 'none';
+            document.getElementById('fab').style.display = m==='A' ? 'flex' : 'none';
+            updateEditBtn();
+        }
+
+        function adj(type, d) {
+            if(type==='h') {
+                sh += d;
+                if(sh > 12) sh = 1;
+                if(sh < 1) sh = 12;
+                document.getElementById('vh').innerText = sh.toString().padStart(2,'0');
+            } else {
+                sm = (sm+d+60)%60;
+                document.getElementById('vm').innerText = sm.toString().padStart(2,'0');
+            }
+        }
+
+        function save() {
+            if(task==='T') {
+                totalTime = (sh * 3600) + (sm * 60);
+                timeLeft = totalTime;
+                updateUI();
+            } else {
+                const newAlarm = { id: Date.now(), time: `${sh.toString().padStart(2,'0')}:${sm.toString().padStart(2,'0')}`, ap: sap, on: true };
+                alarms.push(newAlarm);
+                localStorage.setItem('cythonAlarms', JSON.stringify(alarms));
+                renderAlarms();
+            }
+            closeM();
+        }
+
+        function updateUI() {
+            let h = Math.floor(timeLeft / 3600), m = Math.floor((timeLeft % 3600) / 60), s = timeLeft % 60;
+            document.getElementById('timeDigits').innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            const ring = document.getElementById('fill');
+            ring.style.strokeDashoffset = totalTime ? 848 - (848 * (timeLeft / totalTime)) : 848;
+        }
+
+        function toggleT() {
+            const btn = document.getElementById('playBtn');
+            if(timer) { clearInterval(timer); timer=null; btn.innerHTML = '<i class="fas fa-play"></i>'; }
+            else {
+                if(timeLeft <= 0) return;
+                btn.innerHTML = '<i class="fas fa-pause"></i>';
+                timer = setInterval(() => {
+                    if(timeLeft <= 0) { clearInterval(timer); timer=null; resetT(); return; }
+                    timeLeft--; updateUI();
+                }, 1000);
+            }
+        }
+
+        function resetT() { clearInterval(timer); timer=null; timeLeft=totalTime; updateUI(); document.getElementById('playBtn').innerHTML='<i class="fas fa-play"></i>'; }
+        function quickSet(m) { totalTime=m*60; timeLeft=totalTime; updateUI(); }
+        
+        function openM(t) { 
+            task = t; sh = 12; sm = 0; 
+            document.getElementById('vh').innerText = '12'; document.getElementById('vm').innerText = '00';
+            document.getElementById('apBox').style.display = t==='A' ? 'block' : 'none';
+            document.getElementById('overlay').style.display='flex'; 
+            setTimeout(() => document.getElementById('sheet').classList.add('up'), 50); 
+        }
+
+        function closeM() { document.getElementById('sheet').classList.remove('up'); setTimeout(() => document.getElementById('overlay').style.display='none', 400); }
+        function tAp() { sap = sap==='AM' ? 'PM' : 'AM'; document.getElementById('vAp').innerText = sap; }
+
+        function renderAlarms() {
+            const cont = document.getElementById('alarmContainer');
+            cont.innerHTML = alarms.map(a => `
+                <div class="alarm-card" style="opacity:${a.on?'1':'0.5'}">
+                    <div style="display:flex; align-items:center;">
+                        ${editing ? `<i class="fas fa-minus-circle" style="color:#ff4757; margin-left:15px; font-size:22px;" onclick="removeA(${a.id})"></i>` : ''}
+                        <div><div class="alarm-time-val">${a.time} <small style="font-size:16px; color:var(--main); font-weight:900;">${a.ap}</small></div></div>
+                    </div>
+                    <div class="ios-toggle ${a.on?'on':''}" onclick="toggleAlarmState(${a.id})"></div>
+                </div>
+            `).join('');
+            updateEditBtn();
+        }
+
+        function toggleAlarmState(id) { alarms = alarms.map(a => a.id === id ? {...a, on: !a.on} : a); localStorage.setItem('cythonAlarms', JSON.stringify(alarms)); renderAlarms(); }
+        function removeA(id) { alarms = alarms.filter(a => a.id !== id); localStorage.setItem('cythonAlarms', JSON.stringify(alarms)); renderAlarms(); }
+        function toggleEdit() { editing = !editing; document.getElementById('editBtn').innerText = editing ? 'تم' : 'تعديل'; renderAlarms(); }
+        function updateEditBtn() { document.getElementById('editBtn').classList.toggle('show', mode==='A' && alarms.length > 0); }
+
+        renderAlarms();
+        updateUI();
+    </script>
+</body>
+</html>
