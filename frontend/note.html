@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>iNote Ultra - Ali Qutaiba</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+        
+        :root { 
+            --main: #ff9500; --bg: #ffffff; --app: #ffffff; --text: #000000; 
+            --border: #000000; --card: #f2f2f7; --glass: rgba(255,255,255,0.98); --danger: #ff3b30;
+        }
+        
+        html.dark { 
+            --bg: #000000; --app: #000000; --text: #ffffff; 
+            --border: #ffffff; --card: #1c1c1e; --glass: rgba(0,0,0,0.98); --danger: #ff453a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; caret-color: transparent !important; } 
+        #masterEditor { caret-color: var(--main) !important; } 
+
+        body { background: var(--bg); height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        .phone { width: 100%; height: 100%; max-width: 500px; background: var(--app); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+
+        @media (min-width: 501px) { .phone { height: 94vh; border-radius: 50px; border: 12px solid #2c2c2e; box-shadow: 0 0 100px rgba(0,0,0,0.6); } }
+
+        /* Header */
+        .header { padding: 65px 25px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--border); z-index: 3000; background: var(--app); }
+        .header-left { display: flex; gap: 20px; align-items: center; }
+        .header b { font-size: 28px; font-weight: 900; color: var(--text); }
+        .header i { color: var(--main); font-size: 22px; cursor: pointer; transition: 0.3s; }
+
+        .content { flex: 1; overflow-y: auto; padding: 20px 25px; scrollbar-width: none; }
+        .date-label { color: var(--main); font-size: 14px; text-align: center; margin-bottom: 25px; font-weight: 900; border: 2px solid var(--main); display: inline-block; padding: 2px 15px; border-radius: 20px; width: fit-content; margin-inline: auto; }
+
+        .editor { width: 100%; min-height: 55vh; background: transparent; border: none; color: var(--text); font-size: 21px; outline: none; resize: none; line-height: 1.8; font-weight: 700; }
+
+        /* Voice Memos Style Modal (iOS) */
+        .voice-modal {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 350px;
+            background: var(--card); z-index: 4000; transform: translateY(100%);
+            transition: 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            border-top: 1px solid var(--border); border-radius: 40px 40px 0 0;
+            padding: 30px; display: flex; flex-direction: column; align-items: center;
+        }
+        .voice-modal.active { transform: translateY(0); box-shadow: 0 -20px 40px rgba(0,0,0,0.2); }
+        
+        .wave-container { width: 100%; height: 80px; display: flex; align-items: center; justify-content: center; gap: 4px; margin: 20px 0; }
+        .wave-bar { width: 4px; height: 10px; background: var(--main); border-radius: 2px; transition: 0.1s; }
+        
+        .rec-timer { font-size: 40px; font-weight: 900; color: var(--text); font-variant-numeric: tabular-nums; }
+        
+        .rec-controls { width: 100%; display: flex; justify-content: center; align-items: center; margin-top: 20px; position: relative; }
+        .rec-btn { width: 75px; height: 75px; border-radius: 50%; border: 4px solid var(--bg); background: var(--danger); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .rec-btn.recording { border-radius: 15px; width: 40px; height: 40px; }
+        .rec-btn-outer { width: 90px; height: 90px; border-radius: 50%; border: 3px solid #ccc; display: flex; align-items: center; justify-content: center; }
+
+        /* الأرشيف */
+        .modal { 
+            position: absolute; inset: 0; top: 135px; background: var(--app); z-index: 2000; 
+            transform: translateX(-100%); transition: 0.6s cubic-bezier(0.19, 1, 0.22, 1); 
+            display: flex; flex-direction: column; border-top: 1px solid var(--border);
+        }
+        .modal.active { transform: translateX(0); }
+        .modal b.title { padding: 20px; font-size: 24px; color: var(--text); display: block; text-align: center; border-bottom: 1px dashed var(--border); }
+
+        .history-card { background: var(--card); padding: 20px; border-radius: 25px; margin: 10px 20px; border: 1.5px solid var(--border); }
+        .history-card p { font-weight: 700; color: var(--text); font-size: 16px; margin-bottom: 10px; }
+        .audio-player { width: 100%; height: 40px; margin-top: 10px; filter: grayscale(1) invert(var(--dark-inv, 0)); }
+
+        .toolbar { background: var(--glass); backdrop-filter: blur(40px); padding: 20px 40px calc(30px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; border-top: 3px solid var(--border); z-index: 3000; }
+        .toolbar i { font-size: 28px; color: var(--main); cursor: pointer; }
+    </style>
+</head>
+<body class="light">
+
+    <div class="phone">
+        <div class="header">
+            <i class="fas fa-chevron-right" onclick="location.href='index.html'"></i>
+            <b>مذكراتي</b>
+            <div class="header-left">
+                <i class="fas fa-microphone" onclick="openVoice()"></i>
+                <i class="fas fa-box-archive" id="archiveIcon" onclick="toggleArchive()"></i>
+            </div>
+        </div>
+
+        <div class="content">
+            <div style="text-align: center;"><div class="date-label" id="liveDate"></div></div>
+            <textarea class="editor" id="masterEditor" placeholder="اكتب مذكراتك يا علي..."></textarea>
+        </div>
+
+        <div class="voice-modal" id="voiceModal">
+            <div style="width: 40px; height: 5px; background: #ccc; border-radius: 10px; margin-bottom: 20px;" onclick="closeVoice()"></div>
+            <p style="font-weight: 900; color: var(--text);">تسجيل صوتي جديد</p>
+            <div class="rec-timer" id="recTimer">00:00</div>
+            
+            <div class="wave-container" id="waveContainer">
+                </div>
+
+            <div class="rec-controls">
+                <div class="rec-btn-outer">
+                    <div class="rec-btn" id="recBtn" onclick="toggleRecording()"></div>
+                </div>
+                <i class="fas fa-times" style="position: absolute; right: 20px; font-size: 24px; color: var(--text);" onclick="closeVoice()"></i>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <i class="fas fa-save" onclick="manualSave()"></i>
+            <i class="fas fa-list-ul" onclick="addBullet()"></i>
+            <i class="fas fa-copy" onclick="copyText()"></i>
+            <i class="fas fa-file-pdf" onclick="fullPDF()"></i>
+        </div>
+
+        <div class="modal" id="modalNotes">
+            <b class="title">أرشيف علي</b>
+            <div id="notesList" style="overflow-y: auto; padding-bottom: 100px;"></div>
+        </div>
+    </div>
+
+    <script>
+        (function setup() {
+            const mode = localStorage.getItem('themeMode') || 'light';
+            const color = localStorage.getItem('themeColor') || 'color-1';
+            document.documentElement.className = `${mode} ${color}`;
+            if(mode === 'dark') document.body.style.setProperty('--dark-inv', '1');
+            document.getElementById('liveDate').innerText = new Date().toLocaleDateString('ar-EG', { day: 'numeric', month: 'long' });
+            
+            // إنشاء بارات الأمواج
+            const wave = document.getElementById('waveContainer');
+            for(let i=0; i<30; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'wave-bar';
+                wave.appendChild(bar);
+            }
+        })();
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let timerInterval;
+        let seconds = 0;
+
+        function openVoice() { document.getElementById('voiceModal').classList.add('active'); }
+        function closeVoice() { 
+            if(mediaRecorder && mediaRecorder.state === "recording") stopRecording();
+            document.getElementById('voiceModal').classList.remove('active'); 
+        }
+
+        async function toggleRecording() {
+            const btn = document.getElementById('recBtn');
+            if (!mediaRecorder || mediaRecorder.state === "inactive") {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = saveVoiceNote;
+                
+                mediaRecorder.start();
+                btn.classList.add('recording');
+                startTimer();
+                animateWaves(true);
+            } else {
+                stopRecording();
+            }
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+            document.getElementById('recBtn').classList.remove('recording');
+            clearInterval(timerInterval);
+            animateWaves(false);
+            seconds = 0;
+            document.getElementById('recTimer').innerText = "00:00";
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                seconds++;
+                let min = Math.floor(seconds / 60).toString().padStart(2, '0');
+                let sec = (seconds % 60).toString().padStart(2, '0');
+                document.getElementById('recTimer').innerText = `${min}:${sec}`;
+            }, 1000);
+        }
+
+        function animateWaves(start) {
+            const bars = document.querySelectorAll('.wave-bar');
+            if(start) {
+                window.waveAnim = setInterval(() => {
+                    bars.forEach(bar => {
+                        const h = Math.random() * 60 + 5;
+                        bar.style.height = `${h}px`;
+                    });
+                }, 100);
+            } else {
+                clearInterval(window.waveAnim);
+                bars.forEach(bar => bar.style.height = '10px');
+            }
+        }
+
+        function saveVoiceNote() {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' });
+            const reader = new FileReader();
+            reader.readAsDataURL(audioBlob);
+            reader.onloadend = () => {
+                const base64 = reader.result;
+                const db = JSON.parse(localStorage.getItem('aliNotesV3') || '[]');
+                db.push({ 
+                    id: Date.now(), 
+                    time: new Date().toLocaleString('ar-EG'), 
+                    content: "مذكرة صوتية",
+                    audio: base64 
+                });
+                localStorage.setItem('aliNotesV3', JSON.stringify(db));
+                alert("تم حفظ التسجيل في الأرشيف ✅");
+            };
+        }
+
+        // الأرشيف والوظائف الأخرى
+        const me = document.getElementById('masterEditor');
+        me.value = localStorage.getItem('aliDraft') || '';
+        me.oninput = () => localStorage.setItem('aliDraft', me.value);
+
+        function toggleArchive() {
+            const modal = document.getElementById('modalNotes');
+            modal.classList.toggle('active');
+            if(modal.classList.contains('active')) renderNotes();
+        }
+
+        function renderNotes() {
+            const list = document.getElementById('notesList');
+            const data = JSON.parse(localStorage.getItem('aliNotesV3') || '[]');
+            list.innerHTML = data.length ? '' : '<p style="text-align:center; margin-top:50px; opacity:0.3;">لا يوجد محفوظات</p>';
+            data.reverse().forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'history-card';
+                let contentHTML = item.audio ? 
+                    `<audio controls src="${item.audio}" class="audio-player"></audio>` : 
+                    `<p>${item.content}</p>`;
+                
+                card.innerHTML = `
+                    <small style="color:var(--main); font-weight:900;">${item.time}</small>
+                    ${contentHTML}
+                    <div class="card-actions" style="margin-top:10px; display:flex; gap:10px;">
+                        ${!item.audio ? `<button onclick="cardPDF('${item.id}')" style="background:var(--text); color:var(--app); border:none; padding:8px 15px; border-radius:10px; flex:1;"><i class="fas fa-file-pdf"></i></button>` : ''}
+                        <button class="btn-delete" onclick="deleteNote('${item.id}')" style="background:var(--danger); color:white; border:none; padding:8px 15px; border-radius:10px; flex:1;">حذف</button>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function deleteNote(id) {
+            let data = JSON.parse(localStorage.getItem('aliNotesV3') || '[]');
+            data = data.filter(item => item.id != id);
+            localStorage.setItem('aliNotesV3', JSON.stringify(data));
+            renderNotes();
+        }
+
+        function manualSave() {
+            if(!me.value) return;
+            const db = JSON.parse(localStorage.getItem('aliNotesV3') || '[]');
+            db.push({ id: Date.now(), time: new Date().toLocaleString('ar-EG'), content: me.value });
+            localStorage.setItem('aliNotesV3', JSON.stringify(db));
+            alert("تم الحفظ ✅");
+        }
+
+        function addBullet() { me.value += "\n• "; me.focus(); }
+        function copyText() { navigator.clipboard.writeText(me.value); alert("تم النسخ ✅"); }
+        function fullPDF() { html2pdf().from(me).save('Ali_Draft.pdf'); }
+    </script>
+</body>
+</html>

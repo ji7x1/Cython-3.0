@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>تسجيل الدخول - Cython 2.0</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        (function() {
+            const savedColor = localStorage.getItem('themeColor');
+            const savedMode = localStorage.getItem('themeMode');
+            if (savedColor) document.documentElement.classList.add(savedColor);
+            if (savedMode === 'dark') document.documentElement.classList.add('dark');
+            const bg = savedMode === 'dark' ? '#050505' : '#f0f2f5';
+            document.documentElement.style.backgroundColor = bg;
+        })();
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+
+        :root {
+            --main: #4facfe; --bg: #f0f2f5; --app: #ffffff; --text: #1a1a1a; --p: #64748b; 
+            --glass: rgba(255, 255, 255, 0.7); --border: rgba(0,0,0,0.06); --input: #f8fafc;
+        }
+
+        html.dark { 
+            --bg: #050505; --app: #0f0f0f; --text: #f1f5f9; --p: #94a3b8; 
+            --glass: rgba(15, 15, 15, 0.75); --border: rgba(255,255,255,0.06); --input: #1a1a1a;
+        }
+
+        /* أنظمة الألوان */
+        html.color-1 { --main: #4facfe; } html.color-2 { --main: #ff4757; }
+        html.color-3 { --main: #2ecc71; } html.color-4 { --main: #a29bfe; }
+        html.color-5 { --main: #f1c40f; } html.color-6 { --main: #e84393; }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; user-select: none; }
+
+        body { background: var(--bg); height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; transition: 0.5s; }
+
+        .phone { 
+            width: 100%; height: 100%; max-width: 500px; 
+            background: var(--app); display: flex; flex-direction: column; 
+            position: relative; overflow: hidden; animation: slideUp 0.8s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* أنميشن الصاروخ والروبوتات */
+        .flying-item { position: fixed; pointer-events: none; z-index: 9999; transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
+        .rocket-anim { font-size: 35px; color: var(--main); filter: drop-shadow(0 0 10px var(--main)); }
+        .bot-particle { font-size: 15px; color: var(--main); opacity: 0.8; }
+
+        .header { padding: 60px 30px 20px; text-align: center; }
+        .header i.main-icon { font-size: 60px; color: var(--main); transition: 0.5s; cursor: pointer; }
+        .header i.main-icon:active { transform: scale(0.9) rotate(15deg); }
+        .header h2 { color: var(--text); font-size: 32px; font-weight: 900; letter-spacing: -1px; margin-top: 10px; }
+        .header p { color: var(--p); font-size: 14px; font-weight: 600; }
+
+        .content { flex: 1; padding: 20px 30px; }
+
+        .input-group { margin-bottom: 20px; transform: translateY(0); transition: 0.3s; }
+        .input-group label { display: block; margin-bottom: 8px; color: var(--text); font-weight: 900; font-size: 13px; padding-right: 5px; }
+        
+        .field {
+            width: 100%; padding: 16px 20px; border-radius: 22px;
+            border: 2px solid var(--border); background: var(--input);
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; gap: 15px;
+        }
+        .field i { color: var(--main); font-size: 18px; }
+        .field input { background: none; border: none; width: 100%; color: var(--text); font-weight: 700; font-size: 15px; outline: none; caret-color: var(--main); }
+
+        .field:focus-within { border-color: var(--main); background: var(--app); transform: scale(1.02); box-shadow: 0 15px 30px rgba(0,0,0,0.05); }
+
+        .btn-login {
+            width: 100%; padding: 18px; background: var(--main);
+            color: white; border: none; border-radius: 22px;
+            font-weight: 900; font-size: 18px; cursor: pointer;
+            transition: 0.4s cubic-bezier(0.2, 1, 0.3, 1); margin-top: 10px;
+            box-shadow: 0 15px 30px rgba(var(--main), 0.3);
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+        }
+
+        .back-btn { 
+            display: flex; align-items: center; gap: 8px; justify-content: center; 
+            margin-top: 25px; color: var(--p); text-decoration: none; 
+            font-size: 14px; font-weight: 900; transition: 0.3s;
+        }
+        .back-btn:active { transform: scale(0.9); }
+
+        /* تأثير الاهتزاز */
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        .error-shake { animation: shake 0.3s ease-in-out; border-color: #ff4757 !important; }
+    </style>
+</head>
+<body>
+
+    <div class="phone" id="appBody">
+        <div class="header">
+            <i class="fas fa-robot main-icon" onclick="spawnBots(event)"></i>
+            <h2>عُدنا إليك!</h2>
+            <p>سجل دخولك لتكمل مغامرة Cython</p>
+        </div>
+
+        <div class="content">
+            <form id="loginForm">
+                <div class="input-group">
+                    <label>الاسم البرمجي</label>
+                    <div class="field" id="fieldUser">
+                        <i class="fas fa-user-ninja"></i>
+                        <input type="text" id="userInput" placeholder="مثال: Ali Qutaiba" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>كلمة مرور المحترفين</label>
+                    <div class="field" id="fieldPass">
+                        <i class="fas fa-terminal"></i>
+                        <input type="password" id="passInput" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <button type="button" class="btn-login" onclick="handleLogin(event)">
+                    <span>انطلاق الحساب</span>
+                    <i class="fas fa-bolt"></i>
+                </button>
+            </form>
+
+            <a href="index.html" class="back-btn">
+                <i class="fas fa-arrow-right"></i>
+                <span>العودة للرئيسية</span>
+            </a>
+        </div>
+        
+        <div style="text-align: center; padding-bottom: 30px; color: var(--main); font-weight: 900; font-size: 10px; letter-spacing: 2px; opacity: 0.5;">CYTHON SYSTEM v2.0</div>
+    </div>
+
+    <script>
+        // أنميشن الروبوتات الصغيرة يا علي
+        function spawnBots(e) {
+            const count = 10;
+            const x = e.clientX || window.innerWidth / 2;
+            const y = e.clientY || window.innerHeight / 2;
+
+            for (let i = 0; i < count; i++) {
+                const bot = document.createElement('i');
+                bot.className = 'fas fa-robot flying-item bot-particle';
+                bot.style.left = x + 'px';
+                bot.style.top = y + 'px';
+                document.body.appendChild(bot);
+
+                const angle = (i / count) * Math.PI * 2;
+                const dist = 120 + Math.random() * 60;
+                const tx = Math.cos(angle) * dist;
+                const ty = Math.sin(angle) * dist;
+
+                setTimeout(() => {
+                    bot.style.transform = `translate(${tx}px, ${ty}px) rotate(${Math.random() * 360}deg) scale(0)`;
+                    bot.style.opacity = '0';
+                }, 10);
+                setTimeout(() => bot.remove(), 800);
+            }
+        }
+
+        // أنميشن الصاروخ عند تسجيل الدخول
+        function handleLogin(e) {
+            const user = document.getElementById('userInput').value.trim();
+            const pass = document.getElementById('passInput').value.trim();
+            const btn = e.currentTarget;
+
+            if (!user || !pass) {
+                document.querySelectorAll('.field').forEach(f => f.classList.add('error-shake'));
+                setTimeout(() => document.querySelectorAll('.field').forEach(f => f.classList.remove('error-shake')), 400);
+                return;
+            }
+
+            // إنشاء الصاروخ
+            const rocket = document.createElement('i');
+            rocket.className = 'fas fa-rocket flying-item rocket-anim';
+            rocket.style.left = (e.clientX - 20) + 'px';
+            rocket.style.top = (e.clientY - 20) + 'px';
+            document.body.appendChild(rocket);
+
+            // حفظ البيانات
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('username', user);
+
+            // أنميشن الانطلاق
+            btn.style.transform = "scale(0.95)";
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> جاري المزامنة...';
+
+            setTimeout(() => {
+                rocket.style.transform = 'translateY(-120vh) scale(2)';
+                rocket.style.opacity = '0';
+                document.getElementById('appBody').style.transform = 'translateY(-100vh)';
+                document.getElementById('appBody').style.opacity = '0';
+            }, 100);
+
+            setTimeout(() => {
+                window.location.href = "index.html";
+            }, 800);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>خزنة سايثون</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        // مزامنة الثيم المختار من الصفحة الرئيسية
+        (function() {
+            const mode = localStorage.getItem('themeMode'); // dark or light
+            const color = localStorage.getItem('themeColor'); // color-1, color-2, etc.
+            if (mode === 'dark') document.documentElement.classList.add('dark');
+            if (color) document.documentElement.classList.add(color);
+        })();
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+        
+        :root { 
+            --main: #4facfe; /* اللون الافتراضي */
+            --bg: #f4f7f9; 
+            --app: #ffffff; 
+            --text: #333; 
+            --border: rgba(0,0,0,0.1); 
+        }
+
+        /* دعم الوضع الداكن */
+        html.dark { 
+            --bg: #050505; 
+            --app: #0d0d0d; 
+            --text: #ffffff; 
+            --border: rgba(255,255,255,0.1); 
+        }
+
+        /* دعم الألوان المختارة من الثيمات */
+        html.color-1 { --main: #4facfe; }
+        html.color-2 { --main: #ff3b30; }
+        html.color-3 { --main: #2ecc71; }
+        html.color-4 { --main: #af52de; }
+        html.color-5 { --main: #ffcc00; }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; outline: none; user-select: none; }
+
+        body { background: var(--bg); height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; color: var(--text); }
+        .phone { width: 100%; height: 100%; max-width: 500px; background: var(--app); position: relative; overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,0.2); }
+
+        .screen { position: absolute; inset: 0; background: var(--app); display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; z-index: 10; }
+        .screen.active { display: flex; }
+
+        .nav-header { position: absolute; top: 40px; width: 100%; padding: 0 25px; display: flex; justify-content: space-between; z-index: 100; }
+        .circle-btn { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--app); border: 1px solid var(--border); color: var(--main); cursor: pointer; transition: 0.3s; }
+        .circle-btn:active { background: var(--main); color: #fff; }
+
+        .pass-dots { display: flex; gap: 15px; margin-bottom: 40px; }
+        .dot { width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--border); transition: 0.3s; }
+        .dot.active { background: var(--main); border-color: var(--main); box-shadow: 0 0 15px var(--main); transform: scale(1.2); }
+
+        .keyboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .key-circle { width: 75px; height: 75px; border-radius: 50%; background: rgba(128,128,128,0.05); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .key-circle:active { background: var(--main); color: #fff; transform: scale(0.9); }
+
+        .file-box { width: 100%; background: rgba(128,128,128,0.05); padding: 20px; border-radius: 20px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; text-align: left; border: 1px solid var(--border); }
+        
+        .shake { animation: shake 0.4s; }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-10px)} 75%{transform:translateX(10px)} }
+    </style>
+</head>
+<body>
+
+    <div class="phone">
+        <div class="nav-header">
+            <div class="circle-btn" onclick="location.reload()"><i class="fas fa-redo"></i></div>
+            <div class="circle-btn" onclick="location.href='index.html'"><i class="fas fa-home"></i></div>
+        </div>
+
+        <div id="lock-screen" class="screen active">
+            <h2 id="msg" style="margin-bottom: 20px; font-weight: 900;">أدخل الرمز</h2>
+            <div class="pass-dots" id="dots">
+                <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            </div>
+            <div class="keyboard">
+                <div class="key-circle" onclick="press(1)">1</div>
+                <div class="key-circle" onclick="press(2)">2</div>
+                <div class="key-circle" onclick="press(3)">3</div>
+                <div class="key-circle" onclick="press(4)">4</div>
+                <div class="key-circle" onclick="press(5)">5</div>
+                <div class="key-circle" onclick="press(6)">6</div>
+                <div class="key-circle" onclick="press(7)">7</div>
+                <div class="key-circle" onclick="press(8)">8</div>
+                <div class="key-circle" onclick="press(9)">9</div>
+                <div class="key-circle" onclick="clearAll()">C</div>
+                <div class="key-circle" onclick="press(0)">0</div>
+                <div class="key-circle" onclick="back()"><i class="fas fa-backspace"></i></div>
+            </div>
+        </div>
+
+        <div id="vault-screen" class="screen">
+            <div style="width:100%; text-align: left; padding-top: 80px;">
+                <h2 style="margin-bottom: 20px; border-left: 4px solid var(--main); padding-left: 15px; font-weight: 900;">الملفات المؤمنة</h2>
+                <div class="file-box"><i class="fas fa-image" style="color:var(--main)"></i><div><b>الصور الخاصة</b><br><small>تشفير عالي</small></div></div>
+                <div class="file-box"><i class="fas fa-file-shield" style="color:var(--main)"></i><div><b>المستندات</b><br><small>محمي بالكامل</small></div></div>
+                <button onclick="location.reload()" style="width:100%; padding:18px; border-radius:50px; background:var(--main); border:none; color:#fff; font-weight:bold; margin-top:20px; cursor:pointer;">خروج آمن</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MASTER_PIN = "200512";
+        let currentInput = "";
+
+        function press(num) {
+            if (currentInput.length < 6) {
+                currentInput += num;
+                updateDots();
+                if (currentInput.length === 6) {
+                    setTimeout(checkPin, 150);
+                }
+            }
+        }
+
+        function clearAll() {
+            currentInput = "";
+            updateDots();
+        }
+
+        function back() {
+            currentInput = currentInput.slice(0, -1);
+            updateDots();
+        }
+
+        function updateDots() {
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((dot, i) => {
+                if (i < currentInput.length) dot.classList.add('active');
+                else dot.classList.remove('active');
+            });
+        }
+
+        function checkPin() {
+            if (currentInput === MASTER_PIN) {
+                document.getElementById('lock-screen').classList.remove('active');
+                document.getElementById('vault-screen').classList.add('active');
+            } else {
+                const screen = document.getElementById('lock-screen');
+                screen.classList.add('shake');
+                document.getElementById('msg').innerText = "رمز خاطئ!";
+                document.getElementById('msg').style.color = "#ff3b30";
+                
+                setTimeout(() => {
+                    screen.classList.remove('shake');
+                    currentInput = "";
+                    updateDots();
+                    document.getElementById('msg').innerText = "أدخل الرمز";
+                    document.getElementById('msg').style.color = "var(--text)";
+                }, 600);
+            }
+        }
+    </script>
+</body>
+</html>
