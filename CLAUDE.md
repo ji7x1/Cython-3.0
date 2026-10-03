@@ -1,19 +1,20 @@
 # CLAUDE.md
 
-Small Cython 3.0 extension package `fastmath`.
+Cython 3.0 (سايثون): Iraqi-dialect AI assistant. FastAPI backend + static Arabic RTL frontend.
 
 ## Layout
-- `src/fastmath/_core.pyx` — Cython implementation (all logic lives here)
-- `src/fastmath/__init__.py` — re-exports the public API
-- `setup.py` — `cythonize` config; `pyproject.toml` — metadata, pins Cython `>=3.0,<3.1`
-- `tests/` — pytest suite; `bench.py` — Cython vs pure-Python timing
+- `backend/` — FastAPI app (`main.py`), persona prompt (`persona.py`, keep verbatim), Groq/LangChain chain (`llm.py`), per-conversation memory (`memory.py`), env config (`config.py`)
+- `backend/tests/` — pytest suite; the LLM is always mocked via `app.dependency_overrides[get_reply_chain]`
+- `frontend/` — static pages served by FastAPI at `/`; shared `style.css` (color palettes) and `script.js` (`CythonTheme.apply`)
 
 ## Commands
-- Build (required after editing any `.pyx`): `pip install -e ".[test]"`
-- Test: `python -m pytest -q`
-- Benchmark: `python bench.py`
+- Install: `pip install -r requirements-dev.txt`
+- Run everything: `python -m backend` → http://127.0.0.1:8000
+- Test: `python -m pytest`
 
 ## Notes
-- Generated `.c` / `.so` files are gitignored; never commit them.
-- `_core.pyx` disables `boundscheck`/`wraparound`; validate inputs explicitly.
-- Add any new public function to `__all__` in `__init__.py` and cover it in tests.
+- `GROQ_API_KEY` is read per request; never require it at import time. Never commit `.env`.
+- Frontend HTML files use CRLF line endings; preserve them when editing.
+- Keep the visual design unchanged. Pages differ subtly in theme defaults and palettes; check before sharing more code.
+- Render user/model text with `textContent`/text nodes, never `innerHTML`.
+- Tests must not touch the network.
