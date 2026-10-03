@@ -85,6 +85,11 @@ def test_chat_without_key_returns_503():
     assert res.json()["detail"]["code"] == "llm_not_configured"
 
 
+def test_invalid_input_is_422_even_without_key():
+    client, _ = make_client()
+    assert client.post("/chat", json={"message": "  "}).status_code == 422
+
+
 def test_chat_returns_reply_and_new_conversation_id():
     chain = FakeChain(replies=["هلا بيك عيني"])
     client, _ = make_client(chain)

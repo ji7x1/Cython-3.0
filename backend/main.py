@@ -38,15 +38,12 @@ def api_error(status_code: int, code: str, message: str) -> HTTPException:
     return HTTPException(status_code=status_code, detail={"code": code, "message": message})
 
 
-def get_reply_chain(request: Request) -> ReplyChain:
+def get_reply_chain(request: Request) -> ReplyChain | None:
+    # يرجع None بدل ما يرمي خطأ، حتى اخطاء الادخال (422) تنفحص قبل خطأ المفتاح (503)
     try:
         return get_chain(get_api_key(), request.app.state.settings)
     except LLMNotConfigured:
-        raise api_error(
-            status.HTTP_503_SERVICE_UNAVAILABLE,
-            "llm_not_configured",
-            "GROQ_API_KEY is not set on the server. Add it to .env and restart.",
-        ) from None
+        return None
 
 
 def upstream_error(exc: Exception) -> HTTPException:
@@ -90,7 +87,13 @@ def create_app(settings: Settings | None = None, store: ConversationStore | None
 
     # نقطة الاتصال (Endpoint)
     @app.post("/chat", response_model=ChatResponse)
-    async def chat(body: ChatRequest, chain: ReplyChain = Depends(get_reply_chain)):
+    async def chat(body: ChatRequest, chain: ReplyChain | None = Depends(get_reply_chain)):
+        if chain is None:
+            raise api_error(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                "llm_not_configured",
+                "GROQ_API_KEY is not set on the server. Add it to .env and restart.",
+            )
         store: ConversationStore = app.state.store
         conversation_id = body.conversation_id or uuid.uuid4().hex
         history = store.history(conversation_id)
