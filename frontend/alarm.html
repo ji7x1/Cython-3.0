@@ -1,24 +1,15 @@
 <!DOCTYPE html>
-<script>
-    // 1. نظام الحماية الفوري: يمنع الوميض ويضبط الثيم قبل ظهور أي شيء
-    (function() {
-        const mode = localStorage.getItem('themeMode') || 'dark';
-        const color = localStorage.getItem('themeColor') || 'color-1';
-        if (mode === 'dark') document.documentElement.classList.add('dark');
-        document.documentElement.classList.add(color);
-        const bg = mode === 'dark' ? '#0a0a0a' : '#f4f7f9';
-        document.documentElement.style.backgroundColor = bg;
-        
-        // 2. أمر قتل الانترو: نضع علامة في ذاكرة المتصفح أننا تجاوزنا المقدمة
-        localStorage.setItem('skipIntro', 'true');
-        sessionStorage.setItem('intro_done', 'true');
-    })();
-</script>
-
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <script src="script.js"></script>
+    <script>
+        CythonTheme.apply({ mode: 'dark', color: 'color-1', dark: '#0a0a0a', light: '#f4f7f9' });
+        // أمر قتل الانترو: نضع علامة في ذاكرة المتصفح أننا تجاوزنا المقدمة
+        localStorage.setItem('skipIntro', 'true');
+        sessionStorage.setItem('intro_done', 'true');
+    </script>
     <title>Focus Ultra | Ali Qutaiba</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>

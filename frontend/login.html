@@ -3,19 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <script src="script.js"></script>
+    <script>
+        CythonTheme.apply({ dark: '#050505', light: '#f0f2f5' });
+    </script>
     <title>تسجيل الدخول - Cython 2.0</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <script>
-        (function() {
-            const savedColor = localStorage.getItem('themeColor');
-            const savedMode = localStorage.getItem('themeMode');
-            if (savedColor) document.documentElement.classList.add(savedColor);
-            if (savedMode === 'dark') document.documentElement.classList.add('dark');
-            const bg = savedMode === 'dark' ? '#050505' : '#f0f2f5';
-            document.documentElement.style.backgroundColor = bg;
-        })();
-    </script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');

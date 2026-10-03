@@ -1,0 +1,17 @@
+/* Cython 3.0 - ستايل مشترك بين الصفحات.
+ * ينحمل قبل <style> مال كل صفحة، فأي قاعدة بالصفحة نفسها تبقى هي الغالبة.
+ */
+
+/* الثيمات العشرية (نفس ألوان لوحة الإعدادات بالصفحة الرئيسية) */
+html.color-1 { --main: #4facfe; } html.color-2 { --main: #ff4757; }
+html.color-3 { --main: #2ecc71; } html.color-4 { --main: #a29bfe; }
+html.color-5 { --main: #f1c40f; } html.color-6 { --main: #e84393; }
+html.color-7 { --main: #00d2d3; } html.color-8 { --main: #54a0ff; }
+html.color-9 { --main: #ae8b70; } html.color-10 { --main: #34495e; }
+
+/* اللوحة الهادئة: الصفحات اللي عليها <html data-palette="soft"> (الدردشة، الكاميرا، المهام، حسابي) */
+html[data-palette="soft"].color-1 { --main: #4facfe; } html[data-palette="soft"].color-2 { --main: #ff6b6b; }
+html[data-palette="soft"].color-3 { --main: #51cf66; } html[data-palette="soft"].color-4 { --main: #a29bfe; }
+html[data-palette="soft"].color-5 { --main: #fab005; } html[data-palette="soft"].color-6 { --main: #ff85a1; }
+html[data-palette="soft"].color-7 { --main: #20c997; } html[data-palette="soft"].color-8 { --main: #5c7cfa; }
+html[data-palette="soft"].color-9 { --main: #a67c52; } html[data-palette="soft"].color-10 { --main: #333333; }

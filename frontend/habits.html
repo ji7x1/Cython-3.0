@@ -1,20 +1,16 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-palette="soft">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+    <script>
+        CythonTheme.apply();
+    </script>
     <title>Cython Habits - Final Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <script>
-        // تطبيق الثيم المختار من الصفحة الرئيسية
-        (function() {
-            const mode = localStorage.getItem('themeMode');
-            const color = localStorage.getItem('themeColor');
-            if (mode === 'dark') document.documentElement.classList.add('dark');
-            if (color) document.documentElement.classList.add(color);
-        })();
-    </script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
@@ -24,11 +20,6 @@
         }
         
         /* الألوان المتغيرة بناءً على اختيار المستخدم */
-        html.color-1 { --main: #4facfe; } html.color-2 { --main: #ff6b6b; }
-        html.color-3 { --main: #51cf66; } html.color-4 { --main: #a29bfe; }
-        html.color-5 { --main: #fab005; } html.color-6 { --main: #ff85a1; }
-        html.color-7 { --main: #20c997; } html.color-8 { --main: #5c7cfa; }
-        html.color-9 { --main: #a67c52; } html.color-10 { --main: #333333; }
 
         html.dark { 
             --bg: #0d0d0d; --card: #1a1a1a; --text: #f0f0f0; --border: rgba(255,255,255,0.08);

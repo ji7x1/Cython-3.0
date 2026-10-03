@@ -3,18 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <script src="script.js"></script>
+    <script>
+        CythonTheme.apply();
+    </script>
     <title>خزنة سايثون</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <script>
-        // مزامنة الثيم المختار من الصفحة الرئيسية
-        (function() {
-            const mode = localStorage.getItem('themeMode'); // dark or light
-            const color = localStorage.getItem('themeColor'); // color-1, color-2, etc.
-            if (mode === 'dark') document.documentElement.classList.add('dark');
-            if (color) document.documentElement.classList.add(color);
-        })();
-    </script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');

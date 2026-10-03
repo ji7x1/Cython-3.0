@@ -1,24 +1,17 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-palette="soft">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+    <script>
+        CythonTheme.apply({ dark: '#000000', light: '#f4f7f9' });
+    </script>
     <title>Cython Pro Camera</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <script>
-        (function() {
-            const savedColor = localStorage.getItem('themeColor');
-            const savedMode = localStorage.getItem('themeMode');
-            if (savedColor) document.documentElement.className = savedColor;
-            if (savedMode === 'dark') document.documentElement.classList.add('dark');
-            
-            // تحديث الخلفية بناءً على الوضع المختار في الرئيسية
-            const bg = savedMode === 'dark' ? '#000000' : '#f4f7f9';
-            document.documentElement.style.backgroundColor = bg;
-        })();
-    </script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
@@ -31,11 +24,6 @@
         }
 
         /* أنظمة الألوان العشرة المرتبطة بالرئيسية */
-        html.color-1 { --main: #4facfe; } html.color-2 { --main: #ff6b6b; }
-        html.color-3 { --main: #51cf66; } html.color-4 { --main: #a29bfe; }
-        html.color-5 { --main: #fab005; } html.color-6 { --main: #ff85a1; }
-        html.color-7 { --main: #20c997; } html.color-8 { --main: #5c7cfa; }
-        html.color-9 { --main: #a67c52; } html.color-10 { --main: #333333; }
 
         /* تعديلات الوضع الليلي */
         html.dark { 

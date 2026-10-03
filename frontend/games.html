@@ -3,17 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+    <script>
+        CythonTheme.apply({ color: 'color-1' });
+    </script>
     <title>Cython Games Pro - Ali Qutaiba</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <script>
-        (function() {
-            const savedColor = localStorage.getItem('themeColor') || 'color-1';
-            const savedMode = localStorage.getItem('themeMode');
-            document.documentElement.className = savedColor;
-            if (savedMode === 'dark') document.documentElement.classList.add('dark');
-        })();
-    </script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
@@ -25,11 +22,6 @@
         }
 
         /* الربط العشري المحرم */
-        html.color-1 { --main: #4facfe; } html.color-2 { --main: #ff4757; }
-        html.color-3 { --main: #2ecc71; } html.color-4 { --main: #a29bfe; }
-        html.color-5 { --main: #f1c40f; } html.color-6 { --main: #e84393; }
-        html.color-7 { --main: #00d2d3; } html.color-8 { --main: #54a0ff; }
-        html.color-9 { --main: #ae8b70; } html.color-10 { --main: #34495e; }
 
         html.dark { 
             --bg: #050505; --app: #0f0f0f; --text: #f1f5f9; 

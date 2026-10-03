@@ -1,24 +1,14 @@
 <!DOCTYPE html>
-<script>
-    // نظام الحماية الفوري (Zero Latency)
-    (function() {
-        const mode = localStorage.getItem('themeMode') || 'dark';
-        const color = localStorage.getItem('themeColor') || 'color-1';
-        if (mode === 'dark') document.documentElement.classList.add('dark');
-        if (color) document.documentElement.classList.add(color);
-        const bg = mode === 'dark' ? '#050505' : '#f0f2f5';
-        document.documentElement.style.backgroundColor = bg;
-
-        if (sessionStorage.getItem('intro_seen')) {
-            window.skipIntroEffect = true;
-        }
-    })();
-</script>
-
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+    <script>
+        CythonTheme.apply({ mode: 'dark', color: 'color-1', dark: '#050505', light: '#f0f2f5' });
+        if (sessionStorage.getItem('intro_seen')) window.skipIntroEffect = true;
+    </script>
     <title>Cython Grandmaster | Ali & Ahmed</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -34,12 +24,6 @@
             --glass: rgba(15, 15, 15, 0.8); --border: rgba(255,255,255,0.08); --card: #1c1c1e;
         }
 
-        /* الثيمات العشرية */
-        html.color-1 { --main: #4facfe; } html.color-2 { --main: #ff4757; }
-        html.color-3 { --main: #2ecc71; } html.color-4 { --main: #a29bfe; }
-        html.color-5 { --main: #f1c40f; } html.color-6 { --main: #e84393; }
-        html.color-7 { --main: #00d2d3; } html.color-8 { --main: #54a0ff; }
-        html.color-9 { --main: #ae8b70; } html.color-10 { --main: #34495e; }
 
         * { 
             margin: 0; padding: 0; box-sizing: border-box; 
