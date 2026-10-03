@@ -88,6 +88,14 @@
         
         .send-btn { background: var(--main); color: white; }
         .mic-active { color: #ff4757; animation: pulse 1.5s infinite; }
+        .send-btn:disabled, .input-box input:disabled { opacity: 0.6; cursor: default; }
+
+        .msg.pre { white-space: pre-wrap; }
+        .msg.error { color: #ff4757; }
+        .typing-dots { display: inline-flex; gap: 4px; align-items: center; }
+        .typing-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--main); animation: blink 1.2s infinite ease-in-out; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
 
         .attach-box { position: absolute; bottom: calc(85px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: 92%; background: var(--app); border-radius: 25px; box-shadow: 0 -10px 30px rgba(0,0,0,0.1); display: none; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 20px; z-index: 4000; border: 1px solid rgba(0,0,0,0.1); }
         .attach-box.active { display: grid; }
@@ -99,6 +107,7 @@
         #canvas { background: #fff; flex: 1; touch-action: none; }
 
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes blink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -128,7 +137,7 @@
         
         <div class="menu-wrapper" id="mainMenu">
             <div class="menu-item" onclick="showToast('السجل فارغ')"><i class="fas fa-history" style="color:#6c5ce7"></i> سجل الدردشة</div>
-            <div class="menu-item" onclick="location.reload()" style="color:#ff4757"><i class="fas fa-trash-alt"></i> مسح المحادثة</div>
+            <div class="menu-item" onclick="clearChat()" style="color:#ff4757"><i class="fas fa-trash-alt"></i> مسح المحادثة</div>
             <div class="menu-item" id="shareTrigger">
                 <i class="fas fa-share-alt" style="color:#0984e3"></i> مشاركة 
                 <i class="fas fa-chevron-left" style="margin-right:auto; font-size:10px;"></i>
@@ -164,7 +173,7 @@
         <button class="circle-btn" id="clipBtn"><i class="fas fa-paperclip"></i></button>
         <input type="text" id="userInput" placeholder="اكتب رسالة..." onkeypress="if(event.key === 'Enter') sendMsg()">
         <button class="circle-btn" id="micBtn" onclick="toggleMic()"><i class="fas fa-microphone"></i></button>
-        <button class="circle-btn send-btn" onclick="sendMsg()"><i class="fas fa-paper-plane"></i></button>
+        <button class="circle-btn send-btn" id="sendBtn" onclick="sendMsg()"><i class="fas fa-paper-plane"></i></button>
     </div>
 </div>
 
@@ -203,26 +212,155 @@
     };
 
     // وظائف الدردشة
-    function sendMsg() {
-        const i = document.getElementById('userInput');
-        if(i.value.trim()){
-            append(i.value, 'user');
-            i.value='';
-            setTimeout(() => append("تم استلام رسالتك بنجاح، كيف أساعدك؟", 'ai'), 800);
+    // '' = نفس السيرفر اللي يقدم الصفحة. اذا الواجهة على سيرفر ثاني، عرّف window.CYTHON_API_BASE قبل هذا السكربت.
+    const API_BASE = window.CYTHON_API_BASE || '';
+    const MAX_MESSAGE_CHARS = 4000;
+    const REQUEST_TIMEOUT_MS = 60000;
+    // رقم المحادثة يجي من السيرفر بأول جواب؛ تحديث الصفحة يبدي محادثة جديدة (مثل ما الشاشة تنمسح)
+    let conversationId = null;
+    let sending = false;
+
+    const ERRORS = {
+        network: 'ما كدرت اوصل للسيرفر. تأكد من الانترنت او ان السيرفر شغال وجرب مرة ثانية.',
+        timeout: 'السيرفر طوّل هواية بالجواب، جرب مرة ثانية.',
+        invalid: 'الرسالة بيها مشكلة، تأكد انها مو فارغة او طويلة هواية وجرب مرة ثانية.',
+        rateLimited: 'صار ضغط هواية هسه، انتظر شوية وجرب مرة ثانية.',
+        notConfigured: 'سايثون مو مربوط بالذكاء الاصطناعي هسه (المفتاح ناقص بالسيرفر). كلم المطور يضبطه.',
+        server: 'صارت مشكلة بالسيرفر، جرب بعد شوية.'
+    };
+
+    // خطأ رسالته جاهزة تنعرض للمستخدم باللهجة العراقية
+    class ChatError extends Error {}
+
+    function apiUrl(path) {
+        return new URL(path, API_BASE || document.baseURI).toString();
+    }
+
+    function errorForStatus(status) {
+        if (status === 400 || status === 422) return ERRORS.invalid;
+        if (status === 429) return ERRORS.rateLimited;
+        if (status === 503) return ERRORS.notConfigured;
+        if (status === 504) return ERRORS.timeout;
+        return ERRORS.server;
+    }
+
+    async function requestReply(text) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+        let res;
+        try {
+            const body = { message: text };
+            if (conversationId) body.conversation_id = conversationId;
+            res = await fetch(apiUrl('chat'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+                signal: controller.signal
+            });
+        } catch (err) {
+            throw new ChatError(err.name === 'AbortError' ? ERRORS.timeout : ERRORS.network);
+        } finally {
+            clearTimeout(timer);
         }
+        const data = await res.json().catch(() => null);
+        if (!res.ok) throw new ChatError(errorForStatus(res.status));
+        if (!data || typeof data.reply !== 'string') throw new ChatError(ERRORS.server);
+        if (data.conversation_id) conversationId = data.conversation_id;
+        return data.reply;
+    }
+
+    function setSending(on) {
+        sending = on;
+        document.getElementById('sendBtn').disabled = on;
+        document.getElementById('userInput').disabled = on;
+    }
+
+    async function sendMsg() {
+        if (sending) return;
+        const i = document.getElementById('userInput');
+        const text = i.value.trim();
+        if (!text) return;
+        if (text.length > MAX_MESSAGE_CHARS) { showToast('الرسالة طويلة هواية، اختصرها شوية'); return; }
+        append(text, 'user');
+        i.value = '';
+        setSending(true);
+        const typing = showTyping();
+        try {
+            const reply = await requestReply(text);
+            typing.remove();
+            append(reply.trim(), 'ai');
+        } catch (err) {
+            typing.remove();
+            appendError(err instanceof ChatError ? err.message : ERRORS.server);
+        } finally {
+            setSending(false);
+            i.focus();
+        }
+    }
+
+    function clearChat() {
+        if (conversationId) {
+            fetch(apiUrl('chat/' + encodeURIComponent(conversationId)), { method: 'DELETE', keepalive: true }).catch(() => {});
+        }
+        location.reload();
+    }
+
+    // كل النصوص تنعرض كـ text (مو innerHTML) حتى محد يكدر يحقن HTML بالرسائل
+    function addBubble(d) {
+        const b = document.getElementById('chatbox');
+        b.appendChild(d);
+        b.scrollTop = b.scrollHeight;
+        return d;
+    }
+
+    function buildTools() {
+        const tools = document.createElement('div');
+        tools.className = 'tools';
+        [['استماع', speak], ['ترجمة', translateMsg], ['AB', resetMsg]].forEach(([label, fn]) => {
+            const span = document.createElement('span');
+            span.textContent = label;
+            span.onclick = () => fn(span);
+            tools.appendChild(span);
+        });
+        tools.lastChild.style.cssText = 'background:rgba(0,0,0,0.05); padding:0 4px; border-radius:4px; color:var(--text)';
+        return tools;
     }
 
     function append(t, s) {
         const d = document.createElement('div');
-        d.className = `msg ${s}`;
+        d.className = `msg ${s} pre`;
         d.setAttribute('data-original', t);
-        d.innerHTML = t;
-        if(s === 'ai') {
-            d.innerHTML += `<div class="tools"><span onclick="speak(this)">استماع</span><span onclick="translateMsg(this)">ترجمة</span><span onclick="resetMsg(this)" style="background:rgba(0,0,0,0.05); padding:0 4px; border-radius:4px; color:var(--text)">AB</span></div>`;
-        }
-        const b = document.getElementById('chatbox');
-        b.appendChild(d);
-        b.scrollTop = b.scrollHeight;
+        d.appendChild(document.createTextNode(t));
+        if (s === 'ai') d.appendChild(buildTools());
+        return addBubble(d);
+    }
+
+    function appendImage(src) {
+        if (typeof src !== 'string' || !src.startsWith('data:image/')) return;
+        const d = document.createElement('div');
+        d.className = 'msg user';
+        const img = document.createElement('img');
+        img.src = src;
+        d.appendChild(img);
+        return addBubble(d);
+    }
+
+    function appendError(text) {
+        const d = document.createElement('div');
+        d.className = 'msg ai pre error';
+        d.textContent = text;
+        return addBubble(d);
+    }
+
+    function showTyping() {
+        const d = document.createElement('div');
+        d.className = 'msg ai';
+        d.setAttribute('aria-label', 'سايثون دا يكتب');
+        const dots = document.createElement('div');
+        dots.className = 'typing-dots';
+        for (let k = 0; k < 3; k++) dots.appendChild(document.createElement('span'));
+        d.appendChild(dots);
+        return addBubble(d);
     }
 
     // PDF وصور
@@ -266,7 +404,7 @@
     function openDrawing() { document.getElementById('drawingPad').style.display='flex'; canvas.width=canvas.offsetWidth; canvas.height=canvas.offsetHeight; attachMenu.classList.remove('active'); }
     function closeDrawing() { document.getElementById('drawingPad').style.display='none'; }
     function clearCanvas() { ctx.clearRect(0,0,canvas.width,canvas.height); }
-    function saveDrawing() { const url = canvas.toDataURL(); append(`<img src="${url}">`, 'user'); closeDrawing(); }
+    function saveDrawing() { appendImage(canvas.toDataURL()); closeDrawing(); }
 
     // وظائف إضافية
     let isRec = false;
@@ -286,7 +424,7 @@
         const incoming = localStorage.getItem('cython_incoming_chat');
         if (incoming) {
             JSON.parse(incoming).forEach((m, idx) => {
-                setTimeout(() => append(`<img src="${m.content}">`, 'user'), idx * 500);
+                setTimeout(() => appendImage(m && m.content), idx * 500);
             });
             localStorage.removeItem('cython_incoming_chat');
         }
